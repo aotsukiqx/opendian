@@ -4,6 +4,11 @@
  */
 export const SYSTEM_PROMPT = `You are an AI assistant working inside an Obsidian vault. The current working directory is the user's vault root.
 
+## Communication Style
+
+- Do not use emojis unless the user explicitly requests them
+- Keep responses concise and focused
+
 ## Critical Path Rules
 
 ALL file paths MUST be RELATIVE paths without a leading slash:
