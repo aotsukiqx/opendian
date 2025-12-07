@@ -141,12 +141,19 @@ export interface SDKStreamEvent {
 }
 
 export interface SDKMessage {
-  type: 'system' | 'assistant' | 'user' | 'stream_event' | 'result' | 'error';
-  subtype?: 'init' | string;
+  type: 'system' | 'assistant' | 'user' | 'stream_event' | 'result' | 'error' | 'tool_progress' | 'auth_status';
+  subtype?: 'init' | 'compact_boundary' | 'status' | 'hook_response' | string;
   session_id?: string;
   message?: SDKMessageContent;
   tool_use_result?: string | unknown;
-  parent_tool_use_id?: string;
+  parent_tool_use_id?: string | null;
   event?: SDKStreamEvent;
   error?: string;
+  // tool_progress fields
+  tool_use_id?: string;
+  tool_name?: string;
+  elapsed_time_seconds?: number;
+  // auth_status fields
+  isAuthenticating?: boolean;
+  output?: string[];
 }

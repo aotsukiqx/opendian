@@ -50,7 +50,7 @@ const options: Options = {
   permissionMode: 'bypassPermissions',
   allowDangerouslySkipPermissions: true,
   model: settings.model,  // 'claude-haiku-4-5' | 'claude-sonnet-4-5' | 'claude-opus-4-5'
-  allowedTools: ['Read', 'Write', 'Edit', 'Bash', 'Glob', 'Grep', 'LS'],
+  // All SDK tools are available by default (no allowedTools restriction)
   abortController: this.abortController,
   pathToClaudeCodeExecutable: '/path/to/claude',
   resume: sessionId, // Optional: resume previous session
@@ -102,6 +102,27 @@ await MarkdownRenderer.renderMarkdown(markdown, container, sourcePath, component
 ### Tool Result Location (inside user messages)
 - `user.tool_use_result` - The result of tool execution
 - `user.parent_tool_use_id` - Links result to the original tool_use
+
+## Available Tools
+
+All Claude Agent SDK tools are available (no `allowedTools` restriction):
+
+| Category | Tool | Description |
+|----------|------|-------------|
+| **File Operations** | `Read` | Read file contents |
+| | `Write` | Create or overwrite files |
+| | `Edit` | Make surgical edits (find/replace) |
+| | `Glob` | Find files by pattern |
+| | `Grep` | Search file contents with regex |
+| | `LS` | List directory contents |
+| | `NotebookEdit` | Edit Jupyter notebook cells |
+| **Shell** | `Bash` | Execute shell commands |
+| | `BashOutput` | Get output from background shells |
+| | `KillShell` | Terminate background shells |
+| **Web** | `WebSearch` | Search the web |
+| | `WebFetch` | Fetch and process web content |
+| **Task Management** | `Task` | Spawn subagents for complex tasks |
+| | `TodoWrite` | Track task progress |
 
 ## Settings Structure
 

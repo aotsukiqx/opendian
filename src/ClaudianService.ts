@@ -220,7 +220,6 @@ export class ClaudianService {
       permissionMode: 'bypassPermissions',
       allowDangerouslySkipPermissions: true,
       model: selectedModel,
-      allowedTools: ['Read', 'Write', 'Edit', 'Bash', 'Glob', 'Grep', 'LS'],
       abortController: this.abortController ?? undefined,
       pathToClaudeCodeExecutable: this.resolvedClaudePath!,
     };
@@ -302,7 +301,7 @@ export class ClaudianService {
               yield {
                 type: 'tool_use',
                 id: block.id || `tool-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
-                name: block.name,
+                name: block.name || 'unknown',
                 input: block.input || {},
               };
             }
@@ -346,7 +345,7 @@ export class ClaudianService {
           yield {
             type: 'tool_use',
             id: event.content_block.id || `tool-${Date.now()}`,
-            name: event.content_block.name,
+            name: event.content_block.name || 'unknown',
             input: event.content_block.input || {},
           };
         } else if (event?.type === 'content_block_start' && event.content_block?.type === 'thinking') {
