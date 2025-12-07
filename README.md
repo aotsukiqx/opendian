@@ -8,6 +8,7 @@ An Obsidian plugin that embeds Claude Agent as a sidebar chat interface. Your va
 - **Full Claude Code capabilities**: Read, write, edit files, run bash commands
 - **Vault-aware**: Claude operates with your vault as the working directory
 - **File context awareness**: Auto-attach focused note, or use `@` to mention files
+- **Excluded tags**: Prevent notes with specific tags from auto-loading as context
 - **Streaming responses**: See Claude's responses in real-time
 - **Extended thinking**: Watch Claude's reasoning process with live timer display
 - **Model selection**: Switch between Haiku, Sonnet, and Opus models
@@ -69,6 +70,7 @@ npm run build
 - **Auto-attach**: New conversations auto-attach the currently focused note
 - **@ mention**: Type `@` anywhere to search and attach files from your vault
 - **Remove**: Click `×` on a file chip to remove it
+- **Excluded tags**: Notes with tags listed in Settings → Excluded tags won't auto-attach (but can still be manually attached via `@`)
 - Files are sent as context with your message; Claude will read them to understand your question
 
 ### Example prompts
@@ -86,6 +88,7 @@ npm run build
 - **Enable command blocklist**: Block dangerous bash commands (default: on)
 - **Blocked commands**: Patterns to block (supports regex)
 - **Show tool usage**: Display file operations in chat
+- **Excluded tags**: Tags that prevent notes from auto-loading (e.g., `system`, `private`)
 - **Permission mode**: Toggle Yolo (bypass prompts) or Safe (require approval)
 - **Approved actions**: In Safe mode, manage permanently approved actions (Allow Once vs. Always Allow)
 

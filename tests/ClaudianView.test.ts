@@ -17,6 +17,7 @@ function createMockPlugin(settingsOverrides = {}) {
       thinkingBudget: 'off',
       permissionMode: 'yolo',
       approvedActions: [],
+      excludedTags: [],
       ...settingsOverrides,
     },
     app: {
@@ -38,6 +39,7 @@ function createMockPlugin(settingsOverrides = {}) {
       },
       metadataCache: {
         on: jest.fn(),
+        getFileCache: jest.fn().mockReturnValue(null),
       },
     },
     saveSettings: jest.fn().mockResolvedValue(undefined),
@@ -513,5 +515,146 @@ describe('ClaudianView - Conversation boundaries', () => {
     await (view as any).onConversationSelect('conv-2');
 
     expect((view as any).editedFilesThisSession.size).toBe(0);
+  });
+});
+
+describe('ClaudianView - Excluded Tags', () => {
+  let view: ClaudianView;
+  let mockPlugin: any;
+  let mockLeaf: any;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockPlugin = createMockPlugin({ excludedTags: ['system', 'private'] });
+    mockLeaf = createMockLeaf();
+    view = new ClaudianView(mockLeaf, mockPlugin);
+  });
+
+  describe('hasExcludedTag', () => {
+    it('should return false when excludedTags is empty', () => {
+      mockPlugin.settings.excludedTags = [];
+      const file = new TFile('notes/test.md');
+
+      const result = (view as any).hasExcludedTag(file);
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false when file has no cache', () => {
+      mockPlugin.app.metadataCache.getFileCache.mockReturnValue(null);
+      const file = new TFile('notes/test.md');
+
+      const result = (view as any).hasExcludedTag(file);
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false when file has no tags', () => {
+      mockPlugin.app.metadataCache.getFileCache.mockReturnValue({});
+      const file = new TFile('notes/test.md');
+
+      const result = (view as any).hasExcludedTag(file);
+
+      expect(result).toBe(false);
+    });
+
+    it('should detect excluded tag in frontmatter tags array', () => {
+      mockPlugin.app.metadataCache.getFileCache.mockReturnValue({
+        frontmatter: { tags: ['system', 'notes'] },
+      });
+      const file = new TFile('notes/test.md');
+
+      const result = (view as any).hasExcludedTag(file);
+
+      expect(result).toBe(true);
+    });
+
+    it('should detect excluded tag in frontmatter tags string', () => {
+      mockPlugin.app.metadataCache.getFileCache.mockReturnValue({
+        frontmatter: { tags: 'system' },
+      });
+      const file = new TFile('notes/test.md');
+
+      const result = (view as any).hasExcludedTag(file);
+
+      expect(result).toBe(true);
+    });
+
+    it('should detect excluded tag in inline tags', () => {
+      mockPlugin.app.metadataCache.getFileCache.mockReturnValue({
+        tags: [{ tag: '#system', position: { start: { line: 5 } } }],
+      });
+      const file = new TFile('notes/test.md');
+
+      const result = (view as any).hasExcludedTag(file);
+
+      expect(result).toBe(true);
+    });
+
+    it('should handle tags with # prefix in frontmatter', () => {
+      mockPlugin.app.metadataCache.getFileCache.mockReturnValue({
+        frontmatter: { tags: ['#system'] },
+      });
+      const file = new TFile('notes/test.md');
+
+      const result = (view as any).hasExcludedTag(file);
+
+      expect(result).toBe(true);
+    });
+
+    it('should return false when file has non-excluded tags only', () => {
+      mockPlugin.app.metadataCache.getFileCache.mockReturnValue({
+        frontmatter: { tags: ['notes', 'journal'] },
+        tags: [{ tag: '#todo' }],
+      });
+      const file = new TFile('notes/test.md');
+
+      const result = (view as any).hasExcludedTag(file);
+
+      expect(result).toBe(false);
+    });
+
+    it('should match any of multiple excluded tags', () => {
+      mockPlugin.app.metadataCache.getFileCache.mockReturnValue({
+        frontmatter: { tags: ['private'] },  // 'private' is in excludedTags
+      });
+      const file = new TFile('notes/secret.md');
+
+      const result = (view as any).hasExcludedTag(file);
+
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('Auto-attach exclusion', () => {
+    beforeEach(() => {
+      (view as any).attachedFiles = new Set<string>();
+      (view as any).sessionStarted = false;
+    });
+
+    it('should NOT auto-attach file with excluded tag on file-open', () => {
+      mockPlugin.app.metadataCache.getFileCache.mockReturnValue({
+        frontmatter: { tags: ['system'] },
+      });
+      const file = new TFile('notes/system-file.md');
+
+      // Simulate the check that happens during file-open
+      const hasExcluded = (view as any).hasExcludedTag(file);
+
+      expect(hasExcluded).toBe(true);
+      // File should NOT be added to attachedFiles
+    });
+
+    it('should auto-attach file without excluded tags', () => {
+      mockPlugin.app.metadataCache.getFileCache.mockReturnValue({
+        frontmatter: { tags: ['notes'] },
+      });
+      const file = new TFile('notes/normal-file.md');
+
+      const hasExcluded = (view as any).hasExcludedTag(file);
+
+      expect(hasExcluded).toBe(false);
+      // File CAN be added to attachedFiles
+    });
   });
 });

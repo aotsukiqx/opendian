@@ -135,6 +135,7 @@ interface ClaudianSettings {
   thinkingBudget: ThinkingBudget; // Extended thinking token budget
   permissionMode: PermissionMode; // Yolo or Safe mode
   approvedActions: ApprovedAction[]; // Permanently approved actions
+  excludedTags: string[];        // Tags that exclude files from auto-loading context
 }
 
 type ClaudeModel = 'claude-haiku-4-5' | 'claude-sonnet-4-5' | 'claude-opus-4-5';
@@ -167,6 +168,28 @@ interface ApprovedAction {
 | High | 16,000 | Deep reasoning |
 
 All models support extended thinking. When model is changed, thinking budget resets to model's default.
+
+## Excluded Tags
+
+Notes with specified tags will not auto-load as context when opened. This is useful for excluding system notes, templates, or private content from being automatically attached to conversations.
+
+**Configuration**: Settings → Claudian → Excluded tags
+
+Enter tags one per line (without the `#` prefix). Both frontmatter tags and inline tags are checked:
+
+```yaml
+# Frontmatter tags (both formats supported)
+tags: [system, private]
+tags: system
+
+# Inline tags
+#system #private
+```
+
+**Behavior**:
+- Files with excluded tags won't auto-attach when opened (before session starts)
+- Files with excluded tags won't auto-attach on new session creation
+- Users can still manually attach excluded files via `@` mention
 
 ## Permission Modes
 

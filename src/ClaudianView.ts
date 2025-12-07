@@ -247,10 +247,12 @@ export class ClaudianView extends ItemView {
             this.dismissEditedFile(normalizedPath);
           }
 
-          // Update attachment before session starts
+          // Update attachment before session starts (skip if file has excluded tags)
           if (!this.sessionStarted) {
             this.attachedFiles.clear();
-            this.attachedFiles.add(normalizedPath);
+            if (!this.hasExcludedTag(file)) {
+              this.attachedFiles.add(normalizedPath);
+            }
             this.updateFileIndicator();
           }
         }
@@ -828,9 +830,9 @@ export class ClaudianView extends ItemView {
     this.attachedFiles.clear();
     this.clearEditedFiles();
 
-    // Auto-attach currently focused file for new sessions
+    // Auto-attach currently focused file for new sessions (skip if file has excluded tags)
     const activeFile = this.plugin.app.workspace.getActiveFile();
-    if (activeFile) {
+    if (activeFile && !this.hasExcludedTag(activeFile)) {
       const normalizedPath = this.normalizePathForVault(activeFile.path);
       if (normalizedPath) {
         this.attachedFiles.add(normalizedPath);
@@ -862,10 +864,10 @@ export class ClaudianView extends ItemView {
     this.attachedFiles.clear();
 
     if (isNewConversation || this.messages.length === 0) {
-      // New session - focus changes update attachment, auto-attach current file
+      // New session - focus changes update attachment, auto-attach current file (skip if file has excluded tags)
       this.sessionStarted = false;
       const activeFile = this.plugin.app.workspace.getActiveFile();
-      if (activeFile) {
+      if (activeFile && !this.hasExcludedTag(activeFile)) {
         const normalizedPath = this.normalizePathForVault(activeFile.path);
         if (normalizedPath) {
           this.attachedFiles.add(normalizedPath);
@@ -1554,6 +1556,39 @@ export class ClaudianView extends ItemView {
 
   private markFilesCacheDirty() {
     this.filesCacheDirty = true;
+  }
+
+  /**
+   * Check if a file has any excluded tags (from settings)
+   * Checks both frontmatter tags and inline tags
+   */
+  private hasExcludedTag(file: TFile): boolean {
+    const excludedTags = this.plugin.settings.excludedTags;
+    if (excludedTags.length === 0) return false;
+
+    const cache = this.plugin.app.metadataCache.getFileCache(file);
+    if (!cache) return false;
+
+    // Collect all tags from the file
+    const fileTags: string[] = [];
+
+    // Frontmatter tags (cache.frontmatter?.tags)
+    if (cache.frontmatter?.tags) {
+      const fmTags = cache.frontmatter.tags;
+      if (Array.isArray(fmTags)) {
+        fileTags.push(...fmTags.map((t: string) => t.replace(/^#/, '')));
+      } else if (typeof fmTags === 'string') {
+        fileTags.push(fmTags.replace(/^#/, ''));
+      }
+    }
+
+    // Inline tags (cache.tags)
+    if (cache.tags) {
+      fileTags.push(...cache.tags.map(t => t.tag.replace(/^#/, '')));
+    }
+
+    // Check if any file tag matches an excluded tag
+    return fileTags.some(tag => excludedTags.includes(tag));
   }
 
   /**

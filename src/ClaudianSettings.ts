@@ -64,6 +64,24 @@ export class ClaudianSettingTab extends PluginSettingTab {
           })
       );
 
+    new Setting(containerEl)
+      .setName('Excluded tags')
+      .setDesc('Notes with these tags will not auto-load as context (one per line, without #)')
+      .addTextArea((text) => {
+        text
+          .setPlaceholder('system\nprivate\ndraft')
+          .setValue(this.plugin.settings.excludedTags.join('\n'))
+          .onChange(async (value) => {
+            this.plugin.settings.excludedTags = value
+              .split('\n')
+              .map((s) => s.trim().replace(/^#/, ''))  // Remove leading # if present
+              .filter((s) => s.length > 0);
+            await this.plugin.saveSettings();
+          });
+        text.inputEl.rows = 4;
+        text.inputEl.cols = 30;
+      });
+
     // Approved Actions section
     containerEl.createEl('h3', { text: 'Approved Actions' });
 

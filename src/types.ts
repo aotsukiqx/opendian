@@ -47,6 +47,7 @@ export interface ClaudianSettings {
   thinkingBudget: ThinkingBudget;
   permissionMode: PermissionMode;
   approvedActions: ApprovedAction[];
+  excludedTags: string[];  // Tags that exclude files from auto-loading context
 }
 
 export const DEFAULT_SETTINGS: ClaudianSettings = {
@@ -61,6 +62,7 @@ export const DEFAULT_SETTINGS: ClaudianSettings = {
   thinkingBudget: 'off',
   permissionMode: 'yolo',
   approvedActions: [],
+  excludedTags: [],
 };
 
 // Conversation persistence types
