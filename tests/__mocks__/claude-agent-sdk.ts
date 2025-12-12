@@ -14,6 +14,7 @@ export interface Options {
   abortController?: AbortController;
   pathToClaudeCodeExecutable?: string;
   resume?: string;
+  maxThinkingTokens?: number;
   hooks?: {
     PreToolUse?: HookCallbackMatcher[];
   };

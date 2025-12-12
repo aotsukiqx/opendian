@@ -19,7 +19,8 @@ import {
 } from './types';
 import { getCurrentModelFromEnvironment, getModelsFromEnvironment, parseEnvironmentVariables } from './utils';
 import { deleteCachedImages } from './imageCache';
-import { InlineEditModal } from './ui/InlineEditModal';
+import { InlineEditModal, type InlineEditContext } from './ui/InlineEditModal';
+import { buildCursorContext } from './InlineEditService';
 
 /**
  * Main plugin class for Claudian.
@@ -57,21 +58,32 @@ export default class ClaudianPlugin extends Plugin {
 
     this.addCommand({
       id: 'inline-edit',
-      name: 'Inline edit selected text',
+      name: 'Inline edit',
       editorCallback: async (editor: Editor, view: MarkdownView) => {
         const selectedText = editor.getSelection();
+        const notePath = view.file?.path || 'unknown';
 
-        if (!selectedText.trim()) {
-          new Notice('Select text to edit');
-          return;
+        let editContext: InlineEditContext;
+        if (selectedText.trim()) {
+          // Selection mode
+          editContext = { mode: 'selection', selectedText };
+        } else {
+          // Cursor mode - build cursor context
+          const cursor = editor.getCursor();
+          const cursorContext = buildCursorContext(
+            (line) => editor.getLine(line),
+            editor.lineCount(),
+            cursor.line,
+            cursor.ch
+          );
+          editContext = { mode: 'cursor', cursorContext };
         }
 
-        const notePath = view.file?.path || 'unknown';
-        const modal = new InlineEditModal(this.app, this, selectedText, notePath);
+        const modal = new InlineEditModal(this.app, this, editContext, notePath);
         const result = await modal.openAndWait();
 
         if (result.decision === 'accept' && result.editedText !== undefined) {
-          new Notice('Edit applied');
+          new Notice(editContext.mode === 'cursor' ? 'Inserted' : 'Edit applied');
         }
       },
     });

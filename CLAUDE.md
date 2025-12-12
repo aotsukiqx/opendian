@@ -32,7 +32,8 @@ src/
     ├── TodoListRenderer.ts   # Todo list UI for TodoWrite tool
     ├── SubagentRenderer.ts   # Subagent (Task tool) collapsible UI with nested tools
     ├── EnvSnippetManager.ts  # Environment variable snippet management
-    └── InlineEditModal.ts    # Inline edit modal with diff preview
+    ├── InlineEditModal.ts    # Inline edit modal with diff preview
+    └── inlineEditUtils.ts    # Pure utility functions (normalizeInsertionText, escapeHtml)
 ```
 
 ### UI Component Responsibilities
@@ -432,23 +433,30 @@ What's wrong with this error screenshot?
 
 ## Inline Edit
 
-Interact with selected text directly in your notes - ask questions or request edits - without using the sidebar chat.
+Interact with text directly in your notes - ask questions, request edits, or insert new content - without using the sidebar chat.
+
+### Modes
+
+| Mode | Trigger | Output Tag | Description |
+|------|---------|------------|-------------|
+| **Selection** | Select text + hotkey | `<replacement>` | Edit or ask about selected text |
+| **Cursor** | Place cursor + hotkey | `<insertion>` | Insert content at cursor position |
 
 ### How to Use
 
-1. **Select text** in any note
+1. **Select text** or **place cursor** in any note
 2. **Press hotkey** (configurable via Settings → Hotkeys → "Claudian: Inline edit")
-3. **Enter request** - either a question ("what does this do?") or edit instruction ("fix grammar")
-4. **View response** - questions get conversational answers, edits show inline diff
-5. **For edits**: Accept (Enter) or Reject (Esc) the changes
+3. **Enter request** - question, edit instruction, or insert request
+4. **View response** - questions get conversational answers, edits/insertions show inline diff
+5. **Accept (Enter) or Reject (Esc)** the changes
 
 ### Features
 
 | Feature | Description |
 |---------|-------------|
-| **Inline input** | Input appears directly in the document above selection |
-| **Questions & edits** | Ask about selected text or request modifications |
-| **Word-level diff** | Precise diff showing exactly what changed (for edits) |
+| **Inline input** | Input appears directly in the document (above selection or at cursor) |
+| **Selection & cursor modes** | Edit selected text or insert at cursor position |
+| **Word-level diff** | Precise diff showing exactly what changed |
 | **Multi-turn conversation** | Agent can ask clarifying questions |
 | **Read-only tools** | Agent can read files for context but cannot modify them |
 
@@ -469,7 +477,7 @@ Write tools (`Write`, `Edit`, `Bash`, etc.) are blocked via `allowedTools` white
 
 ### Prompt Structure
 
-The request sent to Claude:
+**Selection mode** - text between delimiters:
 ```
 File: {path/to/note.md}
 
@@ -480,11 +488,37 @@ File: {path/to/note.md}
 Request: {your question or instruction}
 ```
 
+**Cursor mode** - cursor position marked with `|`:
+
+`#inline` - cursor within a line of text:
+```
+File: {path/to/note.md}
+
+---
+text before|text after #inline
+---
+
+Request: {your instruction}
+```
+
+`#inbetween` - cursor on empty line (shows surrounding paragraphs):
+```
+File: {path/to/note.md}
+
+---
+Previous paragraph content
+| #inbetween
+Next paragraph content
+---
+
+Request: {your instruction}
+```
+
 ### Keyboard Shortcuts
 
 | Shortcut | Action |
 |----------|--------|
-| Custom (configurable) | Open inline edit for selected text |
+| Custom (configurable) | Open inline edit at selection or cursor |
 | `Enter` | Submit request / Accept changes |
 | `Escape` | Cancel / Reject changes |
 
@@ -498,7 +532,9 @@ Request: {your question or instruction}
 
 - Inline edits are **separate from the main chat** - they don't appear in conversation history
 - Uses the same model and thinking budget configured in settings
-- Agent uses `<replacement>` tags for edits (triggers diff), or responds conversationally for questions
+- Selection mode: Agent uses `<replacement>` tags for edits
+- Cursor mode: Agent uses `<insertion>` tags for insertions
+- Questions (either mode) get conversational responses without tags
 
 ## Permission Modes
 

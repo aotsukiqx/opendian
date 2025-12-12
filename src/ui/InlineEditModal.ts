@@ -7,8 +7,14 @@
  */
 
 import { App, Editor, MarkdownView } from 'obsidian';
-import { InlineEditService } from '../InlineEditService';
+import { InlineEditService, type InlineEditMode, type CursorContext } from '../InlineEditService';
 import type ClaudianPlugin from '../main';
+
+import { normalizeInsertionText, escapeHtml } from './inlineEditUtils';
+
+export type InlineEditContext =
+  | { mode: 'selection'; selectedText: string }
+  | { mode: 'cursor'; cursorContext: CursorContext };
 import {
   EditorView,
   Decoration,
@@ -23,10 +29,16 @@ const showInlineEdit = StateEffect.define<{
   selFrom: number;
   selTo: number;
   widget: InlineEditController;
+  isInbetween?: boolean;
 }>();
 const showDiff = StateEffect.define<{
   from: number;
   to: number;
+  diffHtml: string;
+  widget: InlineEditController;
+}>();
+const showInsertion = StateEffect.define<{
+  pos: number;
   diffHtml: string;
   widget: InlineEditController;
 }>();
@@ -99,22 +111,33 @@ const inlineEditField = StateField.define<DecorationSet>({
     for (const e of tr.effects) {
       if (e.is(showInlineEdit)) {
         const builder = new RangeSetBuilder<Decoration>();
-        // Input widget above selection
+        // Input widget: block above line for selection/inline mode, inline for inbetween mode
+        const isInbetween = e.value.isInbetween ?? false;
         builder.add(e.value.inputPos, e.value.inputPos, Decoration.widget({
           widget: new InputWidget(e.value.widget),
-          block: true,
-          side: -1,
+          block: !isInbetween,
+          side: isInbetween ? 1 : -1,
         }));
-        // Highlight selection
-        builder.add(e.value.selFrom, e.value.selTo, Decoration.mark({
-          class: 'claudian-inline-selection',
-        }));
+        // Highlight selection (skip for cursor modes where selFrom === selTo)
+        if (e.value.selFrom !== e.value.selTo) {
+          builder.add(e.value.selFrom, e.value.selTo, Decoration.mark({
+            class: 'claudian-inline-selection',
+          }));
+        }
         deco = builder.finish();
       } else if (e.is(showDiff)) {
         const builder = new RangeSetBuilder<Decoration>();
         // Replace selection with diff widget
         builder.add(e.value.from, e.value.to, Decoration.replace({
           widget: new DiffWidget(e.value.diffHtml, e.value.widget),
+        }));
+        deco = builder.finish();
+      } else if (e.is(showInsertion)) {
+        const builder = new RangeSetBuilder<Decoration>();
+        // Insert widget at cursor position (Decoration.widget for point insertion)
+        builder.add(e.value.pos, e.value.pos, Decoration.widget({
+          widget: new DiffWidget(e.value.diffHtml, e.value.widget),
+          side: 1, // Display after the position
         }));
         deco = builder.finish();
       } else if (e.is(hideInlineEdit)) {
@@ -175,7 +198,7 @@ function computeDiff(oldText: string, newText: string): DiffOp[] {
 
 function diffToHtml(ops: DiffOp[]): string {
   return ops.map(op => {
-    const escaped = op.text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const escaped = escapeHtml(op.text);
     switch (op.type) {
       case 'delete': return `<span class="claudian-diff-del">${escaped}</span>`;
       case 'insert': return `<span class="claudian-diff-ins">${escaped}</span>`;
@@ -192,7 +215,7 @@ export class InlineEditModal {
   constructor(
     private app: App,
     private plugin: ClaudianPlugin,
-    private originalText: string,
+    private editContext: InlineEditContext,
     private notePath: string
   ) {}
 
@@ -216,7 +239,7 @@ export class InlineEditModal {
         this.plugin,
         editorView,
         editor,
-        this.originalText,
+        this.editContext,
         this.notePath,
         resolve
       );
@@ -232,9 +255,12 @@ class InlineEditController {
   private agentReplyEl: HTMLElement | null = null;
   private containerEl: HTMLElement | null = null;
   private editedText: string | null = null;
+  private insertedText: string | null = null;
   private selFrom: number;
   private selTo: number;
   private selectedText: string;
+  private mode: InlineEditMode;
+  private cursorContext: CursorContext | null = null;
   private inlineEditService: InlineEditService;
   private escHandler: ((e: KeyboardEvent) => void) | null = null;
   private selectionListener: ((e: Event) => void) | null = null;
@@ -245,26 +271,42 @@ class InlineEditController {
     private plugin: ClaudianPlugin,
     private editorView: EditorView,
     private editor: Editor,
-    originalText: string,
+    editContext: InlineEditContext,
     private notePath: string,
     private resolve: (result: { decision: InlineEditDecision; editedText?: string }) => void
   ) {
     this.inlineEditService = new InlineEditService(plugin);
-    this.selectedText = originalText;
+    this.mode = editContext.mode;
+    if (editContext.mode === 'cursor') {
+      this.cursorContext = editContext.cursorContext;
+      this.selectedText = '';
+    } else {
+      this.selectedText = editContext.selectedText;
+    }
 
-    // Get selection range in CM6 positions
-    this.updateSelectionFromEditor();
+    // Get selection/cursor range in CM6 positions
+    this.updatePositionsFromEditor();
   }
 
-  private updateSelectionFromEditor() {
-    const from = this.editor.getCursor('from');
-    const to = this.editor.getCursor('to');
+  private updatePositionsFromEditor() {
     const doc = this.editorView.state.doc;
-    const fromLine = doc.line(from.line + 1);
-    const toLine = doc.line(to.line + 1);
-    this.selFrom = fromLine.from + from.ch;
-    this.selTo = toLine.from + to.ch;
-    this.selectedText = this.editor.getSelection() || this.selectedText;
+
+    if (this.mode === 'cursor') {
+      // For cursor mode, use the cursor position (from === to)
+      const ctx = this.cursorContext as CursorContext;
+      const line = doc.line(ctx.line + 1);
+      this.selFrom = line.from + ctx.column;
+      this.selTo = this.selFrom; // Same position for cursor
+    } else {
+      // For selection mode
+      const from = this.editor.getCursor('from');
+      const to = this.editor.getCursor('to');
+      const fromLine = doc.line(from.line + 1);
+      const toLine = doc.line(to.line + 1);
+      this.selFrom = fromLine.from + from.ch;
+      this.selTo = toLine.from + to.ch;
+      this.selectedText = this.editor.getSelection() || this.selectedText;
+    }
   }
 
   show() {
@@ -276,10 +318,13 @@ class InlineEditController {
       installedEditors.add(this.editorView);
     }
 
-    // Show input widget + selection highlight
+    // Show input widget + selection highlight (for selection mode)
     this.updateHighlight();
 
-    this.attachSelectionListeners();
+    // Only attach selection listeners in selection mode
+    if (this.mode === 'selection') {
+      this.attachSelectionListeners();
+    }
 
     // Escape handler
     this.escHandler = (e: KeyboardEvent) => {
@@ -293,13 +338,15 @@ class InlineEditController {
   private updateHighlight() {
     const doc = this.editorView.state.doc;
     const line = doc.lineAt(this.selFrom);
+    const isInbetween = this.mode === 'cursor' && this.cursorContext?.isInbetween;
 
     this.editorView.dispatch({
       effects: showInlineEdit.of({
-        inputPos: line.from,
+        inputPos: isInbetween ? this.selFrom : line.from,
         selFrom: this.selFrom,
         selTo: this.selTo,
         widget: this,
+        isInbetween,
       }),
     });
   }
@@ -315,7 +362,7 @@ class InlineEditController {
       const prevTo = this.selTo;
       const newSelection = this.editor.getSelection();
       if (newSelection && newSelection.length > 0) {
-        this.updateSelectionFromEditor();
+        this.updatePositionsFromEditor();
         if (prevFrom !== this.selFrom || prevTo !== this.selTo) {
           this.updateHighlight();
         }
@@ -345,7 +392,7 @@ class InlineEditController {
     this.inputEl = document.createElement('input');
     this.inputEl.type = 'text';
     this.inputEl.className = 'claudian-inline-input';
-    this.inputEl.placeholder = 'Edit instructions...';
+    this.inputEl.placeholder = this.mode === 'cursor' ? 'Insert instructions...' : 'Edit instructions...';
     this.inputEl.spellcheck = false;
     inputWrap.appendChild(this.inputEl);
 
@@ -378,21 +425,35 @@ class InlineEditController {
       // Continue conversation with follow-up message
       result = await this.inlineEditService.continueConversation(userMessage);
     } else {
-      // Initial edit request
-      result = await this.inlineEditService.editText({
-        selectedText: this.selectedText,
-        instruction: userMessage,
-        notePath: this.notePath,
-      });
+      // Initial edit request - build request based on mode
+      if (this.mode === 'cursor') {
+        result = await this.inlineEditService.editText({
+          mode: 'cursor',
+          instruction: userMessage,
+          notePath: this.notePath,
+          cursorContext: this.cursorContext as CursorContext,
+        });
+      } else {
+        result = await this.inlineEditService.editText({
+          mode: 'selection',
+          instruction: userMessage,
+          notePath: this.notePath,
+          selectedText: this.selectedText,
+        });
+      }
     }
 
     this.spinnerEl.style.display = 'none';
 
     if (result.success) {
       if (result.editedText !== undefined) {
-        // Got final answer - show diff
+        // Got replacement - show diff (selection mode)
         this.editedText = result.editedText;
         this.showDiffInPlace();
+      } else if (result.insertedText !== undefined) {
+        // Got insertion - show insertion preview (cursor mode)
+        this.insertedText = result.insertedText;
+        this.showInsertionInPlace();
       } else if (result.clarification) {
         // Agent asking for clarification - show reply and enable input
         this.showAgentReply(result.clarification);
@@ -423,14 +484,14 @@ class InlineEditController {
     if (!this.inputEl) return;
     this.inputEl.disabled = false;
     this.inputEl.placeholder = errorMessage;
-    this.updateSelectionFromEditor();
+    this.updatePositionsFromEditor();
     this.updateHighlight();
     this.attachSelectionListeners();
     this.inputEl.focus();
   }
 
   private showDiffInPlace() {
-    if (!this.editedText) return;
+    if (this.editedText === null) return;
 
     const diffOps = computeDiff(this.selectedText, this.editedText);
     const diffHtml = diffToHtml(diffOps);
@@ -458,8 +519,44 @@ class InlineEditController {
     document.addEventListener('keydown', this.escHandler);
   }
 
+  /** Show insertion preview (all green, no deletions) for cursor mode. */
+  private showInsertionInPlace() {
+    if (this.insertedText === null) return;
+
+    // Trim leading/trailing newlines to avoid extra blank lines
+    const trimmedText = normalizeInsertionText(this.insertedText);
+    this.insertedText = trimmedText;
+
+    // For insertion, it's all new text (no deletions)
+    const escaped = escapeHtml(trimmedText);
+    const diffHtml = `<span class="claudian-diff-ins">${escaped}</span>`;
+
+    // Use showInsertion effect (Decoration.widget) for point insertion
+    this.editorView.dispatch({
+      effects: showInsertion.of({
+        pos: this.selFrom,
+        diffHtml,
+        widget: this,
+      }),
+    });
+
+    // Update escape/enter handlers for diff mode
+    if (this.escHandler) {
+      document.removeEventListener('keydown', this.escHandler);
+    }
+    this.escHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        this.reject();
+      } else if (e.key === 'Enter') {
+        this.accept();
+      }
+    };
+    document.addEventListener('keydown', this.escHandler);
+  }
+
   accept() {
-    if (this.editedText !== null) {
+    const textToInsert = this.editedText ?? this.insertedText;
+    if (textToInsert !== null) {
       // Convert CM6 positions back to Obsidian Editor positions
       const doc = this.editorView.state.doc;
       const fromLine = doc.lineAt(this.selFrom);
@@ -468,8 +565,8 @@ class InlineEditController {
       const to = { line: toLine.number - 1, ch: this.selTo - toLine.from };
 
       this.cleanup();
-      this.editor.replaceRange(this.editedText, from, to);
-      this.resolve({ decision: 'accept', editedText: this.editedText });
+      this.editor.replaceRange(textToInsert, from, to);
+      this.resolve({ decision: 'accept', editedText: textToInsert });
     } else {
       this.cleanup();
       this.resolve({ decision: 'reject' });

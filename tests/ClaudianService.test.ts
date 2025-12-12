@@ -6,7 +6,7 @@ import {
   resetMockMessages,
   getLastOptions,
   getLastResponse,
-} from '@anthropic-ai/claude-agent-sdk';
+} from './__mocks__/claude-agent-sdk';
 
 // Mock fs module
 jest.mock('fs');

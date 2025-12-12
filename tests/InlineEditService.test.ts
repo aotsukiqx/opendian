@@ -9,13 +9,13 @@ import {
   setMockMessages,
   resetMockMessages,
   getLastOptions,
-} from '@anthropic-ai/claude-agent-sdk';
+} from './__mocks__/claude-agent-sdk';
 
 // Mock fs module
 jest.mock('fs');
 
 // Now import after all mocks are set up
-import { InlineEditService, InlineEditRequest } from '../src/InlineEditService';
+import { InlineEditService, InlineEditRequest, buildCursorContext, CursorContext } from '../src/InlineEditService';
 
 // Create a mock plugin
 function createMockPlugin(settings = {}) {
@@ -149,6 +149,7 @@ describe('InlineEditService', () => {
   describe('buildPrompt', () => {
     it('should build prompt with correct format', () => {
       const request: InlineEditRequest = {
+        mode: 'selection',
         selectedText: 'Hello world',
         instruction: 'Fix the greeting',
         notePath: 'notes/test.md',
@@ -164,6 +165,7 @@ describe('InlineEditService', () => {
 
     it('should preserve selected text with newlines', () => {
       const request: InlineEditRequest = {
+        mode: 'selection',
         selectedText: 'Line 1\nLine 2\nLine 3',
         instruction: 'Fix formatting',
         notePath: 'doc.md',
@@ -176,6 +178,7 @@ describe('InlineEditService', () => {
 
     it('should handle empty selected text', () => {
       const request: InlineEditRequest = {
+        mode: 'selection',
         selectedText: '',
         instruction: 'Add content',
         notePath: 'empty.md',
@@ -269,6 +272,7 @@ describe('InlineEditService', () => {
       service = new InlineEditService(mockPlugin);
 
       const result = await service.editText({
+        mode: 'selection',
         selectedText: 'test',
         instruction: 'fix',
         notePath: 'test.md',
@@ -282,6 +286,7 @@ describe('InlineEditService', () => {
       (fs.existsSync as jest.Mock).mockReturnValue(false);
 
       const result = await service.editText({
+        mode: 'selection',
         selectedText: 'test',
         instruction: 'fix',
         notePath: 'test.md',
@@ -302,6 +307,7 @@ describe('InlineEditService', () => {
       ]);
 
       await service.editText({
+        mode: 'selection',
         selectedText: 'test',
         instruction: 'fix',
         notePath: 'test.md',
@@ -331,6 +337,7 @@ describe('InlineEditService', () => {
       ]);
 
       await service.editText({
+        mode: 'selection',
         selectedText: 'test',
         instruction: 'fix',
         notePath: 'test.md',
@@ -354,6 +361,7 @@ describe('InlineEditService', () => {
       ]);
 
       await service.editText({
+        mode: 'selection',
         selectedText: 'test',
         instruction: 'fix',
         notePath: 'test.md',
@@ -374,6 +382,7 @@ describe('InlineEditService', () => {
       ]);
 
       await service.editText({
+        mode: 'selection',
         selectedText: 'test',
         instruction: 'fix',
         notePath: 'test.md',
@@ -393,6 +402,7 @@ describe('InlineEditService', () => {
       ]);
 
       const result = await service.editText({
+        mode: 'selection',
         selectedText: 'broken code',
         instruction: 'fix',
         notePath: 'test.md',
@@ -427,6 +437,7 @@ describe('InlineEditService', () => {
       ]);
 
       await service.editText({
+        mode: 'selection',
         selectedText: 'test',
         instruction: 'fix',
         notePath: 'test.md',
@@ -471,6 +482,7 @@ describe('InlineEditService', () => {
       ]);
 
       const editPromise = service.editText({
+        mode: 'selection',
         selectedText: 'test',
         instruction: 'fix',
         notePath: 'test.md',
@@ -633,6 +645,7 @@ describe('InlineEditService', () => {
       });
 
       const result = await service.editText({
+        mode: 'selection',
         selectedText: 'text',
         instruction: 'edit',
         notePath: 'note.md',
@@ -655,6 +668,401 @@ describe('InlineEditService', () => {
 
     it('extracts LS path from tool input', () => {
       expect((service as any).getPathFromToolInput('LS', { path: 'notes' })).toBe('notes');
+    });
+  });
+
+  describe('buildCursorContext', () => {
+    // Helper to create mock getLine function from array of lines
+    const createGetLine = (lines: string[]) => (line: number) => lines[line] ?? '';
+
+    describe('inline mode detection', () => {
+      it('should detect inline when cursor is in middle of text', () => {
+        const lines = ['Hello world'];
+        const ctx = buildCursorContext(createGetLine(lines), 1, 0, 6);
+
+        expect(ctx.isInbetween).toBe(false);
+        expect(ctx.beforeCursor).toBe('Hello ');
+        expect(ctx.afterCursor).toBe('world');
+        expect(ctx.line).toBe(0);
+        expect(ctx.column).toBe(6);
+      });
+
+      it('should detect inline when cursor is at line start with text after', () => {
+        const lines = ['Hello world'];
+        const ctx = buildCursorContext(createGetLine(lines), 1, 0, 0);
+
+        expect(ctx.isInbetween).toBe(false);
+        expect(ctx.beforeCursor).toBe('');
+        expect(ctx.afterCursor).toBe('Hello world');
+      });
+
+      it('should detect inline when cursor is at line end with text before', () => {
+        const lines = ['Hello world'];
+        const ctx = buildCursorContext(createGetLine(lines), 1, 0, 11);
+
+        expect(ctx.isInbetween).toBe(false);
+        expect(ctx.beforeCursor).toBe('Hello world');
+        expect(ctx.afterCursor).toBe('');
+      });
+
+      it('should preserve whitespace around cursor', () => {
+        const lines = ['  hello   world  '];
+        const ctx = buildCursorContext(createGetLine(lines), 1, 0, 9);
+
+        expect(ctx.isInbetween).toBe(false);
+        expect(ctx.beforeCursor).toBe('  hello  ');
+        expect(ctx.afterCursor).toBe(' world  ');
+      });
+    });
+
+    describe('inbetween mode detection', () => {
+      it('should detect inbetween on empty line', () => {
+        const lines = ['First paragraph', '', 'Second paragraph'];
+        const ctx = buildCursorContext(createGetLine(lines), 3, 1, 0);
+
+        expect(ctx.isInbetween).toBe(true);
+        expect(ctx.beforeCursor).toBe('First paragraph');
+        expect(ctx.afterCursor).toBe('Second paragraph');
+      });
+
+      it('should detect inbetween on whitespace-only line', () => {
+        const lines = ['First paragraph', '   ', 'Second paragraph'];
+        const ctx = buildCursorContext(createGetLine(lines), 3, 1, 2);
+
+        expect(ctx.isInbetween).toBe(true);
+        expect(ctx.beforeCursor).toBe('First paragraph');
+        expect(ctx.afterCursor).toBe('Second paragraph');
+      });
+
+      it('should detect inbetween when cursor on line with only whitespace before and after', () => {
+        const lines = ['Content', '  \t  ', 'More content'];
+        const ctx = buildCursorContext(createGetLine(lines), 3, 1, 2);
+
+        expect(ctx.isInbetween).toBe(true);
+      });
+
+      it('should find nearest non-empty line before cursor', () => {
+        const lines = ['Content', '', '', '', 'More'];
+        const ctx = buildCursorContext(createGetLine(lines), 5, 2, 0);
+
+        expect(ctx.isInbetween).toBe(true);
+        expect(ctx.beforeCursor).toBe('Content');
+      });
+
+      it('should find nearest non-empty line after cursor', () => {
+        const lines = ['Content', '', '', '', 'More'];
+        const ctx = buildCursorContext(createGetLine(lines), 5, 2, 0);
+
+        expect(ctx.isInbetween).toBe(true);
+        expect(ctx.afterCursor).toBe('More');
+      });
+
+      it('should handle cursor at document start (empty first line)', () => {
+        const lines = ['', 'First content'];
+        const ctx = buildCursorContext(createGetLine(lines), 2, 0, 0);
+
+        expect(ctx.isInbetween).toBe(true);
+        expect(ctx.beforeCursor).toBe('');
+        expect(ctx.afterCursor).toBe('First content');
+      });
+
+      it('should handle cursor at document end (empty last line)', () => {
+        const lines = ['Last content', ''];
+        const ctx = buildCursorContext(createGetLine(lines), 2, 1, 0);
+
+        expect(ctx.isInbetween).toBe(true);
+        expect(ctx.beforeCursor).toBe('Last content');
+        expect(ctx.afterCursor).toBe('');
+      });
+
+      it('should handle multiple consecutive empty lines', () => {
+        const lines = ['Para A', '', '', '', 'Para B'];
+        const ctx = buildCursorContext(createGetLine(lines), 5, 2, 0);
+
+        expect(ctx.isInbetween).toBe(true);
+        expect(ctx.beforeCursor).toBe('Para A');
+        expect(ctx.afterCursor).toBe('Para B');
+      });
+    });
+
+    describe('edge cases', () => {
+      it('should handle single line document with cursor', () => {
+        const lines = ['Only line'];
+        const ctx = buildCursorContext(createGetLine(lines), 1, 0, 5);
+
+        expect(ctx.isInbetween).toBe(false);
+        expect(ctx.beforeCursor).toBe('Only ');
+        expect(ctx.afterCursor).toBe('line');
+      });
+
+      it('should handle empty document', () => {
+        const lines = [''];
+        const ctx = buildCursorContext(createGetLine(lines), 1, 0, 0);
+
+        expect(ctx.isInbetween).toBe(true);
+        expect(ctx.beforeCursor).toBe('');
+        expect(ctx.afterCursor).toBe('');
+      });
+
+      it('should preserve line and column in context', () => {
+        const lines = ['Line 0', 'Line 1', 'Line 2'];
+        const ctx = buildCursorContext(createGetLine(lines), 3, 1, 3);
+
+        expect(ctx.line).toBe(1);
+        expect(ctx.column).toBe(3);
+      });
+    });
+  });
+
+  describe('buildCursorPrompt', () => {
+    it('should build inline cursor prompt correctly', () => {
+      const request: InlineEditRequest = {
+        mode: 'cursor',
+        instruction: 'add missing word',
+        notePath: 'notes/test.md',
+        cursorContext: {
+          beforeCursor: 'The quick brown ',
+          afterCursor: ' jumps over',
+          isInbetween: false,
+          line: 5,
+          column: 16,
+        },
+      };
+
+      const prompt = (service as any).buildCursorPrompt(request);
+
+      expect(prompt).toContain('File: notes/test.md');
+      expect(prompt).toContain('The quick brown | jumps over #inline');
+      expect(prompt).toContain('Request: add missing word');
+    });
+
+    it('should build inbetween cursor prompt with surrounding context', () => {
+      const request: InlineEditRequest = {
+        mode: 'cursor',
+        instruction: 'add a new section',
+        notePath: 'docs/readme.md',
+        cursorContext: {
+          beforeCursor: '# Introduction',
+          afterCursor: '## Features',
+          isInbetween: true,
+          line: 3,
+          column: 0,
+        },
+      };
+
+      const prompt = (service as any).buildCursorPrompt(request);
+
+      expect(prompt).toContain('File: docs/readme.md');
+      expect(prompt).toContain('# Introduction');
+      expect(prompt).toContain('| #inbetween');
+      expect(prompt).toContain('## Features');
+      expect(prompt).toContain('Request: add a new section');
+    });
+
+    it('should handle inbetween with no content before cursor', () => {
+      const request: InlineEditRequest = {
+        mode: 'cursor',
+        instruction: 'add header',
+        notePath: 'empty.md',
+        cursorContext: {
+          beforeCursor: '',
+          afterCursor: 'First paragraph',
+          isInbetween: true,
+          line: 0,
+          column: 0,
+        },
+      };
+
+      const prompt = (service as any).buildCursorPrompt(request);
+
+      expect(prompt).toContain('| #inbetween');
+      expect(prompt).toContain('First paragraph');
+      expect(prompt).not.toMatch(/\n\n\| #inbetween/); // No double newline before marker
+    });
+
+    it('should handle inbetween with no content after cursor', () => {
+      const request: InlineEditRequest = {
+        mode: 'cursor',
+        instruction: 'add footer',
+        notePath: 'doc.md',
+        cursorContext: {
+          beforeCursor: 'Last paragraph',
+          afterCursor: '',
+          isInbetween: true,
+          line: 10,
+          column: 0,
+        },
+      };
+
+      const prompt = (service as any).buildCursorPrompt(request);
+
+      expect(prompt).toContain('Last paragraph');
+      expect(prompt).toContain('| #inbetween');
+    });
+  });
+
+  describe('buildPrompt mode dispatch', () => {
+    it('should dispatch to selection prompt for selection mode', () => {
+      const request: InlineEditRequest = {
+        mode: 'selection',
+        instruction: 'fix this',
+        notePath: 'test.md',
+        selectedText: 'selected text here',
+      };
+
+      const prompt = (service as any).buildPrompt(request);
+
+      expect(prompt).toContain('selected text here');
+      expect(prompt).not.toContain('#inline');
+      expect(prompt).not.toContain('#inbetween');
+    });
+
+    it('should dispatch to cursor prompt for cursor mode', () => {
+      const request: InlineEditRequest = {
+        mode: 'cursor',
+        instruction: 'insert here',
+        notePath: 'test.md',
+        cursorContext: {
+          beforeCursor: 'before',
+          afterCursor: 'after',
+          isInbetween: false,
+          line: 0,
+          column: 6,
+        },
+      };
+
+      const prompt = (service as any).buildPrompt(request);
+
+      expect(prompt).toContain('before|after #inline');
+    });
+  });
+
+  describe('parseResponse with insertion tags', () => {
+    it('should extract text from insertion tags', () => {
+      const response = 'Here is the content:\n<insertion>inserted text here</insertion>';
+
+      const result = (service as any).parseResponse(response);
+
+      expect(result.success).toBe(true);
+      expect(result.insertedText).toBe('inserted text here');
+      expect(result.editedText).toBeUndefined();
+    });
+
+    it('should handle multiline insertion content', () => {
+      const response = '<insertion>Line 1\nLine 2\nLine 3</insertion>';
+
+      const result = (service as any).parseResponse(response);
+
+      expect(result.success).toBe(true);
+      expect(result.insertedText).toBe('Line 1\nLine 2\nLine 3');
+    });
+
+    it('should prefer replacement tags over insertion tags', () => {
+      const response = '<replacement>replaced</replacement><insertion>inserted</insertion>';
+
+      const result = (service as any).parseResponse(response);
+
+      expect(result.success).toBe(true);
+      expect(result.editedText).toBe('replaced');
+      expect(result.insertedText).toBeUndefined();
+    });
+
+    it('should handle insertion tags with leading/trailing newlines', () => {
+      const response = '<insertion>\n## New Section\n\nContent here\n</insertion>';
+
+      const result = (service as any).parseResponse(response);
+
+      expect(result.success).toBe(true);
+      expect(result.insertedText).toBe('\n## New Section\n\nContent here\n');
+    });
+
+    it('should handle empty insertion tags', () => {
+      const response = '<insertion></insertion>';
+
+      const result = (service as any).parseResponse(response);
+
+      expect(result.success).toBe(true);
+      expect(result.insertedText).toBe('');
+    });
+
+    it('should handle insertion with special characters', () => {
+      const response = '<insertion>const x = a < b && c > d;</insertion>';
+
+      const result = (service as any).parseResponse(response);
+
+      expect(result.success).toBe(true);
+      expect(result.insertedText).toBe('const x = a < b && c > d;');
+    });
+
+    it('should return clarification when no tags present', () => {
+      const response = 'What would you like me to insert?';
+
+      const result = (service as any).parseResponse(response);
+
+      expect(result.success).toBe(true);
+      expect(result.clarification).toBe('What would you like me to insert?');
+      expect(result.insertedText).toBeUndefined();
+      expect(result.editedText).toBeUndefined();
+    });
+  });
+
+  describe('editText with cursor mode', () => {
+    beforeEach(() => {
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+    });
+
+    it('should handle cursor mode request', async () => {
+      setMockMessages([
+        { type: 'system', subtype: 'init', session_id: 'cursor-session' },
+        {
+          type: 'assistant',
+          message: { content: [{ type: 'text', text: '<insertion>fox</insertion>' }] },
+        },
+        { type: 'result' },
+      ]);
+
+      const result = await service.editText({
+        mode: 'cursor',
+        instruction: 'what animal?',
+        notePath: 'test.md',
+        cursorContext: {
+          beforeCursor: 'The quick brown ',
+          afterCursor: ' jumps over',
+          isInbetween: false,
+          line: 0,
+          column: 16,
+        },
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.insertedText).toBe('fox');
+    });
+
+    it('should handle inbetween mode request', async () => {
+      setMockMessages([
+        { type: 'system', subtype: 'init', session_id: 'inbetween-session' },
+        {
+          type: 'assistant',
+          message: { content: [{ type: 'text', text: '<insertion>## Description\n\nNew section content</insertion>' }] },
+        },
+        { type: 'result' },
+      ]);
+
+      const result = await service.editText({
+        mode: 'cursor',
+        instruction: 'add description section',
+        notePath: 'readme.md',
+        cursorContext: {
+          beforeCursor: '# Title',
+          afterCursor: '## Features',
+          isInbetween: true,
+          line: 2,
+          column: 0,
+        },
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.insertedText).toContain('## Description');
     });
   });
 });

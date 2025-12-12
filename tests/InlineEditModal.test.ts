@@ -6,6 +6,8 @@
  * Consider extracting these to a shared module for direct testing.
  */
 
+import { normalizeInsertionText, escapeHtml } from '../src/ui/inlineEditUtils';
+
 // Copy of the diff algorithm from InlineEditModal for testing
 interface DiffOp {
   type: 'equal' | 'insert' | 'delete';
@@ -75,6 +77,90 @@ function diffToHtml(ops: DiffOp[]): string {
     })
     .join('');
 }
+
+describe('InlineEditModal - Insertion Newline Trimming', () => {
+  describe('normalizeInsertionText', () => {
+    it('should remove leading newlines', () => {
+      const input = '\n\nContent here';
+      const result = normalizeInsertionText(input);
+      expect(result).toBe('Content here');
+    });
+
+    it('should remove trailing newlines', () => {
+      const input = 'Content here\n\n';
+      const result = normalizeInsertionText(input);
+      expect(result).toBe('Content here');
+    });
+
+    it('should remove both leading and trailing newlines', () => {
+      const input = '\n\nContent here\n\n';
+      const result = normalizeInsertionText(input);
+      expect(result).toBe('Content here');
+    });
+
+    it('should preserve internal newlines', () => {
+      const input = '\n## Section\n\nParagraph content\n';
+      const result = normalizeInsertionText(input);
+      expect(result).toBe('## Section\n\nParagraph content');
+    });
+
+    it('should handle text with no newlines', () => {
+      const input = 'Simple text';
+      const result = normalizeInsertionText(input);
+      expect(result).toBe('Simple text');
+    });
+
+    it('should handle only newlines', () => {
+      const input = '\n\n\n';
+      const result = normalizeInsertionText(input);
+      expect(result).toBe('');
+    });
+
+    it('should handle empty string', () => {
+      const input = '';
+      const result = normalizeInsertionText(input);
+      expect(result).toBe('');
+    });
+
+    it('should not trim spaces (only newlines)', () => {
+      const input = '  Content with spaces  ';
+      const result = normalizeInsertionText(input);
+      expect(result).toBe('  Content with spaces  ');
+    });
+
+    it('should handle multiline markdown content', () => {
+      const input = '\n## Description\n\nThis project provides tools for managing notes.\n\n### Features\n- Feature 1\n- Feature 2\n';
+      const result = normalizeInsertionText(input);
+      expect(result).toBe('## Description\n\nThis project provides tools for managing notes.\n\n### Features\n- Feature 1\n- Feature 2');
+    });
+
+    it('should handle code blocks with newlines', () => {
+      const input = '\n```javascript\nconst x = 1;\n```\n';
+      const result = normalizeInsertionText(input);
+      expect(result).toBe('```javascript\nconst x = 1;\n```');
+    });
+
+    it('should handle CRLF newlines', () => {
+      const input = '\r\n\r\nContent\r\n';
+      const result = normalizeInsertionText(input);
+      expect(result).toBe('Content');
+    });
+  });
+});
+
+describe('inlineEditUtils - escapeHtml', () => {
+  it('should escape angle brackets', () => {
+    expect(escapeHtml('a < b && c > d')).toBe('a &lt; b && c &gt; d');
+  });
+
+  it('should leave ampersands untouched (matching current preview behavior)', () => {
+    expect(escapeHtml('a & b')).toBe('a & b');
+  });
+
+  it('should handle empty string', () => {
+    expect(escapeHtml('')).toBe('');
+  });
+});
 
 describe('InlineEditModal - Word-level Diff', () => {
   describe('computeDiff', () => {

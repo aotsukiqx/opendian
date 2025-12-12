@@ -11,20 +11,93 @@ import { THINKING_BUDGETS } from './types';
 import { getVaultPath, parseEnvironmentVariables, findClaudeCLIPath, isPathWithinVault as isPathWithinVaultUtil } from './utils';
 import { getInlineEditSystemPrompt } from './systemPrompt';
 
-export interface InlineEditRequest {
-  selectedText: string;
+export type InlineEditMode = 'selection' | 'cursor';
+
+export interface CursorContext {
+  beforeCursor: string;
+  afterCursor: string;
+  isInbetween: boolean;
+  line: number;
+  column: number;
+}
+
+export interface InlineEditSelectionRequest {
+  mode: 'selection';
   instruction: string;
   notePath: string;
+  selectedText: string;
 }
+
+export interface InlineEditCursorRequest {
+  mode: 'cursor';
+  instruction: string;
+  notePath: string;
+  cursorContext: CursorContext;
+}
+
+export type InlineEditRequest = InlineEditSelectionRequest | InlineEditCursorRequest;
 
 export interface InlineEditResult {
   success: boolean;
-  editedText?: string;
+  editedText?: string;      // replacement (selection mode)
+  insertedText?: string;    // insertion (cursor mode)
   clarification?: string;
   error?: string;
 }
 
 const READ_ONLY_TOOLS = ['Read', 'Grep', 'Glob', 'LS', 'WebSearch', 'WebFetch'] as const;
+
+/** Helper to find nearest non-empty line in a direction. */
+function findNearestNonEmptyLine(
+  getLine: (line: number) => string,
+  lineCount: number,
+  startLine: number,
+  direction: 'before' | 'after'
+): string {
+  const step = direction === 'before' ? -1 : 1;
+  for (let i = startLine + step; i >= 0 && i < lineCount; i += step) {
+    const content = getLine(i);
+    if (content.trim().length > 0) {
+      return content;
+    }
+  }
+  return '';
+}
+
+/**
+ * Builds cursor context for inline edit cursor mode.
+ * @param getLine Function to get line content by index (0-indexed)
+ * @param lineCount Total number of lines in document
+ * @param line Cursor line (0-indexed)
+ * @param column Cursor column
+ */
+export function buildCursorContext(
+  getLine: (line: number) => string,
+  lineCount: number,
+  line: number,
+  column: number
+): CursorContext {
+  const lineContent = getLine(line);
+  const beforeCursor = lineContent.substring(0, column);
+  const afterCursor = lineContent.substring(column);
+
+  const lineIsEmpty = lineContent.trim().length === 0;
+  const nothingBefore = beforeCursor.trim().length === 0;
+  const nothingAfter = afterCursor.trim().length === 0;
+  const isInbetween = lineIsEmpty || (nothingBefore && nothingAfter);
+
+  let contextBefore = beforeCursor;
+  let contextAfter = afterCursor;
+
+  if (isInbetween) {
+    // Find nearest non-empty line before cursor
+    contextBefore = findNearestNonEmptyLine(getLine, lineCount, line, 'before');
+    // Find nearest non-empty line after cursor
+    contextAfter = findNearestNonEmptyLine(getLine, lineCount, line, 'after');
+  }
+
+  return { beforeCursor: contextBefore, afterCursor: contextAfter, isInbetween, line, column };
+}
 
 /** Service for inline text editing with Claude using read-only tools. */
 export class InlineEditService {
@@ -140,29 +213,31 @@ export class InlineEditService {
     }
   }
 
-  /** Parses response text for <replacement> tag. */
+  /** Parses response text for <replacement> or <insertion> tag. */
   private parseResponse(responseText: string): InlineEditResult {
-    const match = responseText.match(/<replacement>([\s\S]*?)<\/replacement>/);
+    const replacementMatch = responseText.match(/<replacement>([\s\S]*?)<\/replacement>/);
+    if (replacementMatch) {
+      return { success: true, editedText: replacementMatch[1] };
+    }
 
-    if (match) {
-      return {
-        success: true,
-        editedText: match[1],
-      };
+    const insertionMatch = responseText.match(/<insertion>([\s\S]*?)<\/insertion>/);
+    if (insertionMatch) {
+      return { success: true, insertedText: insertionMatch[1] };
     }
 
     const trimmed = responseText.trim();
     if (trimmed) {
-      return {
-        success: true,
-        clarification: trimmed,
-      };
+      return { success: true, clarification: trimmed };
     }
 
     return { success: false, error: 'Empty response' };
   }
 
   private buildPrompt(request: InlineEditRequest): string {
+    if (request.mode === 'cursor') {
+      return this.buildCursorPrompt(request);
+    }
+    // Selection mode
     return [
       `File: ${request.notePath}`,
       '',
@@ -170,6 +245,29 @@ export class InlineEditService {
       request.selectedText,
       '---',
       '',
+      `Request: ${request.instruction}`,
+    ].join('\n');
+  }
+
+  private buildCursorPrompt(request: InlineEditCursorRequest): string {
+    const ctx = request.cursorContext;
+
+    if (ctx.isInbetween) {
+      // For #inbetween, include surrounding context lines
+      const parts = [`File: ${request.notePath}`, '', '---'];
+      if (ctx.beforeCursor) parts.push(ctx.beforeCursor);
+      parts.push('| #inbetween');
+      if (ctx.afterCursor) parts.push(ctx.afterCursor);
+      parts.push('---', '', `Request: ${request.instruction}`);
+      return parts.join('\n');
+    }
+
+    // For #inline, show the cursor position within the line
+    return [
+      `File: ${request.notePath}`,
+      '', '---',
+      `${ctx.beforeCursor}|${ctx.afterCursor} #inline`,
+      '---', '',
       `Request: ${request.instruction}`,
     ].join('\n');
   }

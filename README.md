@@ -81,19 +81,24 @@ Send images to Claude via drag-and-drop, paste (Cmd/Ctrl+V), or file path in you
 
 ### Inline Edit
 
-Interact with selected text directly in your notes - ask questions or request edits - without opening the sidebar chat.
+Interact with text directly in your notes - ask questions, request edits, or insert new content - without opening the sidebar chat.
 
-1. **Select text** in any note
+**Two modes:**
+- **Selection mode**: Select text, then press hotkey to edit or ask about the selection
+- **Cursor mode**: Place cursor (no selection), then press hotkey to insert content at cursor position
+
+**How to use:**
+1. **Select text** or **place cursor** in any note
 2. **Press hotkey** (configure via Settings → Hotkeys → "Claudian: Inline edit")
-3. **Enter request** - either a question ("what does this do?") or edit instruction ("fix grammar")
-4. **View response** - questions get conversational answers, edits show inline diff
-5. **For edits**: Accept (Enter) or Reject (Esc)
+3. **Enter request** - question, edit instruction, or insert request
+4. **View response** - questions get answers, edits/insertions show inline diff preview
+5. **Accept (Enter) or Reject (Esc)**
 
 **Features:**
-- **Questions & edits**: Ask about selected text or request modifications
+- **Selection & cursor modes**: Edit selected text or insert at cursor position
 - **Multi-turn conversation**: Agent can ask clarifying questions
 - **Read-only tools**: Agent can read files and search the web for context
-- **Inline diff**: Precise word-level diff with red strikethrough (deletions) and green highlight (insertions)
+- **Inline diff**: Word-level diff with red strikethrough (deletions) and green highlight (insertions)
 
 The inline edit agent has access to `Read`, `Grep`, `Glob`, `LS`, `WebSearch`, and `WebFetch` tools for gathering context, but write tools are blocked.
 
@@ -185,8 +190,8 @@ src/
 - [x] Async subagent support
 - [x] Inline edit feature
 - [x] Diff view in chat panel
-- [ ] Cursor postion awareness 
-- [ ] Selected or cursor position awareness in main agnet
+- [x] Cursor position awareness in inline edit
+- [ ] Selection/cursor awareness in main agent
 - [ ] `#` to saved in customization prompt
 - [ ] Enhance robustness of permissions setting 
 - [ ] Skills, Hooks, MCP and other advanced features
