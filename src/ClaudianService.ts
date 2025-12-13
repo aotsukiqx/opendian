@@ -366,7 +366,7 @@ export class ClaudianService {
 
     // Apply permission mode
     if (permissionMode === 'yolo') {
-      // Yolo mode: bypass permissions but use hooks to enforce blocklist and vault restriction
+      // YOLO mode: bypass permissions but use hooks to enforce blocklist and vault restriction
       options.permissionMode = 'bypassPermissions';
       options.allowDangerouslySkipPermissions = true;
       options.hooks = {
@@ -790,7 +790,7 @@ export class ClaudianService {
         this.plugin.getView()?.fileContextManager?.cancelFileEdit(toolName, input);
         return {
           behavior: 'deny',
-          message: 'No approval handler available. Please enable Yolo mode or configure permissions.',
+          message: 'No approval handler available. Please enable YOLO mode or configure permissions.',
         };
       }
 

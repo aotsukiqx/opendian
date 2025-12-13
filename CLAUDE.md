@@ -215,7 +215,7 @@ interface ClaudianSettings {
   lastClaudeModel?: ClaudeModel; // Last selected default model (for category switching)
   lastCustomModel?: ClaudeModel;  // Last selected custom model (for category switching)
   thinkingBudget: ThinkingBudget; // Extended thinking token budget
-  permissionMode: PermissionMode; // Yolo or Safe mode
+  permissionMode: PermissionMode; // YOLO or Safe mode
   approvedActions: ApprovedAction[]; // Permanently approved actions
   excludedTags: string[];        // Tags that exclude files from auto-loading context
   environmentVariables: string;  // Custom env vars in KEY=VALUE format (one per line)
@@ -540,14 +540,14 @@ Request: {your instruction}
 
 | Mode | Description |
 |------|-------------|
-| Yolo | Bypass permission prompts (default). Claude executes tools without approval. |
+| YOLO | Bypass permission prompts (default). Claude executes tools without approval. |
 | Safe | Require approval for tool usage. Shows approval dialog for each action. |
 
 ### Security Restrictions (Both Modes)
 
 **Vault Restriction**: Agent can ONLY access files within the vault directory. Paths are normalized via `realpath` (symlink-safe) and Bash commands are scanned for path-like tokens; attempts to touch files outside the vault are blocked automatically.
 
-**Command Blocklist**: Dangerous bash commands are blocked even in Yolo mode.
+**Command Blocklist**: Dangerous bash commands are blocked even in YOLO mode.
 
 ### Approval Memory
 
@@ -686,9 +686,9 @@ Permanently approved actions are stored and can be managed in Settings → Appro
 
 ### Permission Mode Toggle
 - `.claudian-permission-toggle` - Container for toggle switch
-- `.claudian-permission-label` - Label showing "Yolo" or "Safe"
+- `.claudian-permission-label` - Label showing "YOLO" or "Safe"
 - `.claudian-toggle-switch` - Toggle switch element
-- `.claudian-toggle-switch.active` - Active state (Yolo mode)
+- `.claudian-toggle-switch.active` - Active state (YOLO mode)
 
 ### Approval Modal
 - `.claudian-approval-modal` - Modal container

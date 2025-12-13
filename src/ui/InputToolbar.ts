@@ -174,7 +174,7 @@ export class ThinkingBudgetSelector {
   }
 }
 
-/** Permission mode toggle (Yolo/Safe). */
+/** Permission mode toggle (YOLO/Safe). */
 export class PermissionToggle {
   private container: HTMLElement;
   private toggleEl: HTMLElement | null = null;
@@ -209,7 +209,7 @@ export class PermissionToggle {
       this.toggleEl.removeClass('active');
     }
 
-    this.labelEl.setText(isYolo ? 'Yolo' : 'Safe');
+    this.labelEl.setText(isYolo ? 'YOLO' : 'Safe');
   }
 
   private async toggle() {

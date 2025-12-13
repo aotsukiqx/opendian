@@ -15,7 +15,7 @@ An Obsidian plugin that embeds Claude Agent (using Claude Agent SDK) as a sideba
 - **Advanced Model Control**: Select between Haiku, Sonnet, and Opus, configure custom models via environment variables, and fine-tune thinking budget.
 - **Transparent Tooling**: Visualize tool calls, subagent activity, and track asynchronous subagent operations with detailed UI feedback.
 - **Persistent Sessions**: Save and resume conversations with full context across sessions.
-- **Robust Security**: Implement permission modes (Yolo/Safe), a safety blocklist, and vault confinement with symlink-safe checks.
+- **Robust Security**: Implement permission modes (YOLO/Safe), a safety blocklist, and vault confinement with symlink-safe checks.
 - **Intuitive File Management**: See indicators for edited files, with smart detection, auto-dismissal, and quick access.
 
 ## Requirements
@@ -106,7 +106,7 @@ Interact with text directly in your notes - ask questions, request edits, or ins
 - **Show tool usage**: Display file operations in chat
 - **Excluded tags**: Tags that prevent notes from auto-loading (e.g., `sensitive`, `private`)
 - **Media folder**: Configure where vault stores attachments for embedded image support (e.g., `attachments`)
-- **Permission mode**: Toggle Yolo (bypass prompts) or Safe (require approval)
+- **Permission mode**: Toggle YOLO (bypass prompts) or Safe (require approval)
 - **Approved actions**: In Safe mode, manage permanently approved actions (Allow Once vs. Always Allow)
 - **Environment variables**: Custom environment variables for Claude SDK (KEY=VALUE format)
 - **Environment snippets**: Save and restore environment variable configurations
@@ -129,7 +129,7 @@ Interact with text directly in your notes - ask questions, request edits, or ins
 - **Outbound scope**: Content sent to Claude/custom APIs includes your input, attached files/snippets, images (base64), and model-issued tool calls plus summarized outputs. Default provider is Anthropic; if `ANTHROPIC_BASE_URL` is set, traffic goes to that endpoint.
 - **Local storage**: Settings, chat history, approved actions, and environment variable snippets are stored in `.obsidian/plugins/claudian`. Image cache is written to `.claudian-cache/images`; you can clear it when deleting conversations or uninstalling the plugin.
 - **Commands & file access**: The plugin can read/write files and execute Bash commands within the vault directory; Safe mode approvals and the blocklist apply, and paths are constrained to the vault via `realpath`.
-- **User controls**: You can edit the blocked-command list, switch Safe/Yolo modes, clear history, delete caches, and remove API keys; disabling the plugin stops all remote calls.
+- **User controls**: You can edit the blocked-command list, switch Safe/YOLO modes, clear history, delete caches, and remove API keys; disabling the plugin stops all remote calls.
 - **Telemetry**: No additional telemetry or third-party tracking. Data retention/compliance follows the terms of your configured API provider.
 
 ## Architecture
