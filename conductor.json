@@ -1,0 +1,5 @@
+{
+    "scripts": {
+        "run": "cd \"$CONDUCTOR_ROOT_PATH\" && git checkout $CONDUCTOR_WORKSPACE_NAME -- . && npm run build; git reset --hard HEAD"
+    }
+}
