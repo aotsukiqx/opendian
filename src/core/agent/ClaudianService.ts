@@ -7,6 +7,7 @@
 
 import type { CanUseTool, Options, PermissionResult } from '@anthropic-ai/claude-agent-sdk';
 import { query as agentQuery } from '@anthropic-ai/claude-agent-sdk';
+import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
@@ -252,6 +253,27 @@ export class ClaudianService {
   }
 
   private findClaudeCLI(): string | null {
+    // Check for user-specified custom path first
+    const customPath = this.plugin.settings.claudeCliPath?.trim();
+    if (customPath) {
+      const expandedPath = expandHomePath(customPath);
+      if (fs.existsSync(expandedPath)) {
+        // Validate that the path is a file, not a directory
+        try {
+          const stat = fs.statSync(expandedPath);
+          if (stat.isFile()) {
+            return expandedPath;
+          }
+          console.warn(`Claudian: Custom CLI path is a directory, not a file: ${expandedPath}`);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          console.warn(`Claudian: Custom CLI path not accessible: ${expandedPath} (${message})`);
+        }
+      } else {
+        console.warn(`Claudian: Custom CLI path not found: ${expandedPath}`);
+      }
+      // Continue to auto-detection if custom path is invalid
+    }
     return findClaudeCLIPath();
   }
 
@@ -596,6 +618,7 @@ export class ClaudianService {
   cleanup() {
     this.cancel();
     this.resetSession();
+    this.resolvedClaudePath = null;
   }
 
   /** Sets the approval callback for UI prompts. */

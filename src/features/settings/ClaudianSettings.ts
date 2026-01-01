@@ -6,12 +6,14 @@
 
 import type { App } from 'obsidian';
 import { Notice, PluginSettingTab, Setting } from 'obsidian';
+import * as fs from 'fs';
 
 import { getCurrentPlatformKey } from '../../core/types';
 import { DEFAULT_CLAUDE_MODELS } from '../../core/types/models';
 import type ClaudianPlugin from '../../main';
 import { EnvSnippetManager, McpSettingsManager, SlashCommandSettings } from '../../ui';
 import { getModelsFromEnvironment, parseEnvironmentVariables } from '../../utils/env';
+import { expandHomePath } from '../../utils/path';
 import { buildNavMappingText, parseNavMappings } from './keyboardNavigation';
 
 /** Plugin settings tab displayed in Obsidian's settings pane. */
@@ -442,5 +444,72 @@ export class ClaudianSettingTab extends PluginSettingTab {
     // Environment Snippets subsection
     const envSnippetsContainer = containerEl.createDiv({ cls: 'claudian-env-snippets-container' });
     new EnvSnippetManager(envSnippetsContainer, this.plugin);
+
+    // Advanced section
+    new Setting(containerEl).setName('Advanced').setHeading();
+
+    const cliPathSetting = new Setting(containerEl)
+      .setName('Claude CLI path')
+      .setDesc('Custom path to Claude Code CLI. Leave empty for auto-detection. Use cli.js path on Windows for npm installations.');
+
+    // Create validation message element
+    const validationEl = containerEl.createDiv({ cls: 'claudian-cli-path-validation' });
+    validationEl.style.color = 'var(--text-error)';
+    validationEl.style.fontSize = '0.85em';
+    validationEl.style.marginTop = '-0.5em';
+    validationEl.style.marginBottom = '0.5em';
+    validationEl.style.display = 'none';
+
+    const validatePath = (value: string): string | null => {
+      const trimmed = value.trim();
+      if (!trimmed) return null; // Empty is valid (auto-detect)
+
+      const expandedPath = expandHomePath(trimmed);
+
+      if (!fs.existsSync(expandedPath)) {
+        return 'Path does not exist';
+      }
+      const stat = fs.statSync(expandedPath);
+      if (!stat.isFile()) {
+        return 'Path is a directory, not a file';
+      }
+      return null;
+    };
+
+    cliPathSetting.addText((text) => {
+      // Platform-aware placeholder
+      const placeholder = process.platform === 'win32'
+        ? 'D:\\nodejs\\node_global\\node_modules\\@anthropic-ai\\claude-code\\cli.js'
+        : '/usr/local/lib/node_modules/@anthropic-ai/claude-code/cli.js';
+      text
+        .setPlaceholder(placeholder)
+        .setValue(this.plugin.settings.claudeCliPath || '')
+        .onChange(async (value) => {
+          const error = validatePath(value);
+          if (error) {
+            validationEl.setText(error);
+            validationEl.style.display = 'block';
+            text.inputEl.style.borderColor = 'var(--text-error)';
+          } else {
+            validationEl.style.display = 'none';
+            text.inputEl.style.borderColor = '';
+          }
+
+          this.plugin.settings.claudeCliPath = value.trim();
+          await this.plugin.saveSettings();
+          // Clear cached path so next query will use the new path
+          this.plugin.agentService?.cleanup();
+        });
+      text.inputEl.addClass('claudian-settings-cli-path-input');
+      text.inputEl.style.width = '100%';
+
+      // Validate on initial load
+      const initialError = validatePath(this.plugin.settings.claudeCliPath || '');
+      if (initialError) {
+        validationEl.setText(initialError);
+        validationEl.style.display = 'block';
+        text.inputEl.style.borderColor = 'var(--text-error)';
+      }
+    });
   }
 }
