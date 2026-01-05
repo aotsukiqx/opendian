@@ -5,6 +5,8 @@
  * DOM manipulation is tested manually in Obsidian.
  */
 
+import { extractLinkTarget } from '@/utils/fileLink';
+
 // Extract the pattern from the module for testing
 // This matches the pattern in src/utils/fileLink.ts
 const WIKILINK_PATTERN = /(?<!!)\[\[([^\]|#^]+)(?:#[^\]|]+)?(?:\^[^\]|]+)?(?:\|[^\]]+)?\]\]/g;
@@ -219,6 +221,20 @@ describe('wikilink pattern matching', () => {
       const text = 'Check **[[important.md]]** for *[[details.md]]*';
       const matches = findWikilinks(text);
       expect(matches).toHaveLength(2);
+    });
+  });
+
+  describe('wikilink target extraction', () => {
+    it('keeps heading references in target', () => {
+      expect(extractLinkTarget('[[note#section]]')).toBe('note#section');
+    });
+
+    it('keeps block references in target', () => {
+      expect(extractLinkTarget('[[note^block]]')).toBe('note^block');
+    });
+
+    it('drops display text while preserving anchors', () => {
+      expect(extractLinkTarget('[[note#section|Alias]]')).toBe('note#section');
     });
   });
 });

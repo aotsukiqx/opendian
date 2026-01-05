@@ -6,7 +6,6 @@
  */
 
 import type { App, Component } from 'obsidian';
-import { TFile } from 'obsidian';
 
 /**
  * Regex pattern to match Obsidian wikilinks in text content.
@@ -25,7 +24,14 @@ interface WikilinkMatch {
   index: number;
   fullMatch: string;
   linkPath: string;
+  linkTarget: string;
   displayText: string;
+}
+
+export function extractLinkTarget(fullMatch: string): string {
+  const inner = fullMatch.slice(2, -2);
+  const pipeIndex = inner.indexOf('|');
+  return pipeIndex >= 0 ? inner.slice(0, pipeIndex) : inner;
 }
 
 /**
@@ -40,13 +46,14 @@ function findWikilinks(app: App, text: string): WikilinkMatch[] {
   while ((match = WIKILINK_PATTERN.exec(text)) !== null) {
     const fullMatch = match[0];
     const linkPath = match[1];
+    const linkTarget = extractLinkTarget(fullMatch);
 
     if (!fileExistsInVault(app, linkPath)) continue;
 
     const pipeIndex = fullMatch.lastIndexOf('|');
     const displayText = pipeIndex > 0 ? fullMatch.slice(pipeIndex + 1, -2) : linkPath;
 
-    matches.push({ index: match.index, fullMatch, linkPath, displayText });
+    matches.push({ index: match.index, fullMatch, linkPath, linkTarget, displayText });
   }
 
   return matches.sort((a, b) => b.index - a.index);
@@ -84,14 +91,14 @@ function fileExistsInVault(app: App, linkPath: string): boolean {
  * Click handling is done via event delegation in registerFileLinkHandler.
  */
 function createWikilink(
-  linkPath: string,
+  linkTarget: string,
   displayText: string
 ): HTMLElement {
   const link = document.createElement('a');
   link.className = 'claudian-file-link internal-link';
   link.textContent = displayText;
-  link.setAttribute('data-href', linkPath);
-  link.setAttribute('href', linkPath);
+  link.setAttribute('data-href', linkTarget);
+  link.setAttribute('href', linkTarget);
   return link;
 }
 
@@ -112,16 +119,9 @@ export function registerFileLinkHandler(
 
     if (link) {
       event.preventDefault();
-      const linkPath = link.dataset.href || link.getAttribute('href');
-      if (linkPath) {
-        // Open the file using Obsidian's API
-        const file = app.metadataCache.getFirstLinkpathDest(linkPath, '');
-        if (file instanceof TFile) {
-          const leaf = app.workspace.getLeaf('tab');
-          void leaf.openFile(file);
-        } else {
-          void app.workspace.openLinkText(linkPath, '', 'tab');
-        }
+      const linkTarget = link.dataset.href || link.getAttribute('href');
+      if (linkTarget) {
+        void app.workspace.openLinkText(linkTarget, '', 'tab');
       }
     }
   });
@@ -134,7 +134,7 @@ function buildFragmentWithLinks(text: string, matches: WikilinkMatch[]): Documen
   const fragment = document.createDocumentFragment();
   let currentIndex = text.length;
 
-  for (const { index, fullMatch, linkPath, displayText } of matches) {
+  for (const { index, fullMatch, linkTarget, displayText } of matches) {
     const endIndex = index + fullMatch.length;
 
     if (endIndex < currentIndex) {
@@ -144,7 +144,7 @@ function buildFragmentWithLinks(text: string, matches: WikilinkMatch[]): Documen
       );
     }
 
-    fragment.insertBefore(createWikilink(linkPath, displayText), fragment.firstChild);
+    fragment.insertBefore(createWikilink(linkTarget, displayText), fragment.firstChild);
     currentIndex = index;
   }
 
