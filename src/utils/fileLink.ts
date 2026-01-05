@@ -21,6 +21,37 @@ import { TFile } from 'obsidian';
  */
 const WIKILINK_PATTERN = /(?<!!)\[\[([^\]|#^]+)(?:#[^\]|]+)?(?:\^[^\]|]+)?(?:\|[^\]]+)?\]\]/g;
 
+interface WikilinkMatch {
+  index: number;
+  fullMatch: string;
+  linkPath: string;
+  displayText: string;
+}
+
+/**
+ * Finds all wikilinks in text that exist in the vault.
+ * Sorted by index descending for end-to-start processing.
+ */
+function findWikilinks(app: App, text: string): WikilinkMatch[] {
+  WIKILINK_PATTERN.lastIndex = 0;
+  const matches: WikilinkMatch[] = [];
+
+  let match: RegExpExecArray | null;
+  while ((match = WIKILINK_PATTERN.exec(text)) !== null) {
+    const fullMatch = match[0];
+    const linkPath = match[1];
+
+    if (!fileExistsInVault(app, linkPath)) continue;
+
+    const pipeIndex = fullMatch.lastIndexOf('|');
+    const displayText = pipeIndex > 0 ? fullMatch.slice(pipeIndex + 1, -2) : linkPath;
+
+    matches.push({ index: match.index, fullMatch, linkPath, displayText });
+  }
+
+  return matches.sort((a, b) => b.index - a.index);
+}
+
 /**
  * Checks if a file exists in the vault.
  */
@@ -97,6 +128,37 @@ export function registerFileLinkHandler(
 }
 
 /**
+ * Builds a document fragment with wikilinks replaced by clickable links.
+ */
+function buildFragmentWithLinks(text: string, matches: WikilinkMatch[]): DocumentFragment {
+  const fragment = document.createDocumentFragment();
+  let currentIndex = text.length;
+
+  for (const { index, fullMatch, linkPath, displayText } of matches) {
+    const endIndex = index + fullMatch.length;
+
+    if (endIndex < currentIndex) {
+      fragment.insertBefore(
+        document.createTextNode(text.slice(endIndex, currentIndex)),
+        fragment.firstChild
+      );
+    }
+
+    fragment.insertBefore(createWikilink(linkPath, displayText), fragment.firstChild);
+    currentIndex = index;
+  }
+
+  if (currentIndex > 0) {
+    fragment.insertBefore(
+      document.createTextNode(text.slice(0, currentIndex)),
+      fragment.firstChild
+    );
+  }
+
+  return fragment;
+}
+
+/**
  * Processes a text node and replaces wikilinks with clickable links.
  * Returns true if any replacements were made.
  */
@@ -104,77 +166,10 @@ function processTextNode(app: App, node: Text): boolean {
   const text = node.textContent;
   if (!text || !text.includes('[[')) return false;
 
-  // Reset regex state
-  WIKILINK_PATTERN.lastIndex = 0;
-
-  const matches: Array<{
-    index: number;
-    fullMatch: string;
-    linkPath: string;
-    displayText: string;
-  }> = [];
-
-  let match: RegExpExecArray | null;
-  while ((match = WIKILINK_PATTERN.exec(text)) !== null) {
-    const fullMatch = match[0];
-    const linkPath = match[1];
-
-    // Extract display text (after | if present, otherwise use link path)
-    const pipeIndex = fullMatch.lastIndexOf('|');
-    const displayText = pipeIndex > 0
-      ? fullMatch.slice(pipeIndex + 1, -2)
-      : linkPath;
-
-    // Only create link if file exists in vault
-    if (!fileExistsInVault(app, linkPath)) continue;
-
-    matches.push({
-      index: match.index,
-      fullMatch,
-      linkPath,
-      displayText,
-    });
-  }
-
+  const matches = findWikilinks(app, text);
   if (matches.length === 0) return false;
 
-  // Sort matches by index (descending) to replace from end to start
-  matches.sort((a, b) => b.index - a.index);
-
-  // Create a document fragment to hold the result
-  const fragment = document.createDocumentFragment();
-  const remaining = text;
-  let currentIndex = text.length;
-
-  // Process matches from end to start
-  for (const { index, fullMatch, linkPath, displayText } of matches) {
-    const endIndex = index + fullMatch.length;
-
-    // Add text after this match
-    if (endIndex < currentIndex) {
-      fragment.insertBefore(
-        document.createTextNode(remaining.slice(endIndex, currentIndex)),
-        fragment.firstChild
-      );
-    }
-
-    // Create the link
-    const link = createWikilink(linkPath, displayText);
-    fragment.insertBefore(link, fragment.firstChild);
-
-    currentIndex = index;
-  }
-
-  // Add remaining text at the beginning
-  if (currentIndex > 0) {
-    fragment.insertBefore(
-      document.createTextNode(remaining.slice(0, currentIndex)),
-      fragment.firstChild
-    );
-  }
-
-  // Replace the original text node
-  node.parentNode?.replaceChild(fragment, node);
+  node.parentNode?.replaceChild(buildFragmentWithLinks(text, matches), node);
   return true;
 }
 
@@ -195,82 +190,16 @@ export function processFileLinks(app: App, container: HTMLElement): void {
   // Process text within inline code elements
   // (wikilinks in inline code aren't rendered by Obsidian's MarkdownRenderer)
   container.querySelectorAll('code').forEach((codeEl) => {
-    // Skip code blocks (they have a parent <pre>)
     if (codeEl.parentElement?.tagName === 'PRE') return;
 
     const text = codeEl.textContent;
     if (!text || !text.includes('[[')) return;
 
-    // Find all wikilink matches
-    WIKILINK_PATTERN.lastIndex = 0;
-    const matches: Array<{
-      index: number;
-      fullMatch: string;
-      linkPath: string;
-      displayText: string;
-    }> = [];
-
-    let match: RegExpExecArray | null;
-    while ((match = WIKILINK_PATTERN.exec(text)) !== null) {
-      const fullMatch = match[0];
-      const linkPath = match[1];
-
-      // Only include if file exists in vault
-      if (!fileExistsInVault(app, linkPath)) continue;
-
-      // Extract display text (after | if present, otherwise use link path)
-      const pipeIndex = fullMatch.lastIndexOf('|');
-      const displayText = pipeIndex > 0
-        ? fullMatch.slice(pipeIndex + 1, -2)
-        : linkPath;
-
-      matches.push({
-        index: match.index,
-        fullMatch,
-        linkPath,
-        displayText,
-      });
-    }
-
+    const matches = findWikilinks(app, text);
     if (matches.length === 0) return;
 
-    // Sort matches by index (descending) to replace from end to start
-    matches.sort((a, b) => b.index - a.index);
-
-    // Create a document fragment to hold the rebuilt content
-    const fragment = document.createDocumentFragment();
-    let currentIndex = text.length;
-
-    // Process matches from end to start
-    for (const { index, fullMatch, linkPath, displayText } of matches) {
-      const endIndex = index + fullMatch.length;
-
-      // Add text after this match
-      if (endIndex < currentIndex) {
-        fragment.insertBefore(
-          document.createTextNode(text.slice(endIndex, currentIndex)),
-          fragment.firstChild
-        );
-      }
-
-      // Create the link
-      const link = createWikilink(linkPath, displayText);
-      fragment.insertBefore(link, fragment.firstChild);
-
-      currentIndex = index;
-    }
-
-    // Add remaining text at the beginning
-    if (currentIndex > 0) {
-      fragment.insertBefore(
-        document.createTextNode(text.slice(0, currentIndex)),
-        fragment.firstChild
-      );
-    }
-
-    // Replace the code element's content
     codeEl.textContent = '';
-    codeEl.appendChild(fragment);
+    codeEl.appendChild(buildFragmentWithLinks(text, matches));
   });
 
   // Process regular text nodes (not in code blocks or already-rendered links)
