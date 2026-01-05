@@ -103,7 +103,7 @@ export class InstructionRefineService {
       env: {
         ...process.env,
         ...customEnv,
-        PATH: getEnhancedPath(customEnv.PATH),
+        PATH: getEnhancedPath(customEnv.PATH, this.resolvedClaudePath ?? undefined),
       },
       allowedTools: [...READ_ONLY_TOOLS],
       permissionMode: 'bypassPermissions',

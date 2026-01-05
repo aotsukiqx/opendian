@@ -431,7 +431,8 @@ export class ClaudianService {
 
     // Enhance PATH for GUI apps (Obsidian has minimal PATH)
     // User-specified PATH from settings takes priority
-    const enhancedPath = getEnhancedPath(customEnv.PATH);
+    // Pass CLI path so we can auto-detect Node.js if using .js file
+    const enhancedPath = getEnhancedPath(customEnv.PATH, this.resolvedClaudePath ?? undefined);
 
     // Build the prompt - either a string or content blocks with images
     const queryPrompt = this.buildPromptWithImages(prompt, images);

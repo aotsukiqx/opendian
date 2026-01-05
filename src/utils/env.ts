@@ -4,10 +4,12 @@
  * Environment variable parsing, model configuration, and PATH enhancement for GUI apps.
  */
 
+import * as fs from 'fs';
 import * as path from 'path';
 
 const isWindows = process.platform === 'win32';
 const PATH_SEPARATOR = isWindows ? ';' : ':';
+const NODE_EXECUTABLE = isWindows ? 'node.exe' : 'node';
 
 /**
  * Get the user's home directory, handling both Unix and Windows.
@@ -29,19 +31,76 @@ function getExtraBinaryPaths(): string[] {
     const appData = process.env.APPDATA;
     const programFiles = process.env.ProgramFiles || 'C:\\Program Files';
     const programFilesX86 = process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)';
+    const programData = process.env.ProgramData || 'C:\\ProgramData';
 
     // Node.js / npm locations
     if (appData) {
       paths.push(path.join(appData, 'npm'));
-      paths.push(path.join(appData, 'nvm'));
     }
     if (localAppData) {
+      paths.push(path.join(localAppData, 'Programs', 'nodejs'));
       paths.push(path.join(localAppData, 'Programs', 'node'));
     }
 
-    // Common program locations
+    // Common program locations (official Node.js installer)
     paths.push(path.join(programFiles, 'nodejs'));
     paths.push(path.join(programFilesX86, 'nodejs'));
+
+    // nvm-windows: active Node.js is usually under %NVM_SYMLINK%
+    const nvmSymlink = process.env.NVM_SYMLINK;
+    if (nvmSymlink) {
+      paths.push(nvmSymlink);
+    }
+
+    // nvm-windows: stores Node.js versions in %NVM_HOME% or %APPDATA%\nvm
+    const nvmHome = process.env.NVM_HOME;
+    if (nvmHome) {
+      paths.push(nvmHome);
+    } else if (appData) {
+      paths.push(path.join(appData, 'nvm'));
+    }
+
+    // volta: installs to %VOLTA_HOME%\bin or %USERPROFILE%\.volta\bin
+    const voltaHome = process.env.VOLTA_HOME;
+    if (voltaHome) {
+      paths.push(path.join(voltaHome, 'bin'));
+    } else if (home) {
+      paths.push(path.join(home, '.volta', 'bin'));
+    }
+
+    // fnm (Fast Node Manager): %FNM_MULTISHELL_PATH% is the active Node.js bin
+    const fnmMultishell = process.env.FNM_MULTISHELL_PATH;
+    if (fnmMultishell) {
+      paths.push(fnmMultishell);
+    }
+
+    // fnm (Fast Node Manager): %FNM_DIR% or %LOCALAPPDATA%\fnm
+    const fnmDir = process.env.FNM_DIR;
+    if (fnmDir) {
+      paths.push(fnmDir);
+    } else if (localAppData) {
+      paths.push(path.join(localAppData, 'fnm'));
+    }
+
+    // Chocolatey: %ChocolateyInstall%\bin or C:\ProgramData\chocolatey\bin
+    const chocolateyInstall = process.env.ChocolateyInstall;
+    if (chocolateyInstall) {
+      paths.push(path.join(chocolateyInstall, 'bin'));
+    } else {
+      paths.push(path.join(programData, 'chocolatey', 'bin'));
+    }
+
+    // scoop: %SCOOP%\shims or %USERPROFILE%\scoop\shims
+    const scoopDir = process.env.SCOOP;
+    if (scoopDir) {
+      paths.push(path.join(scoopDir, 'shims'));
+      paths.push(path.join(scoopDir, 'apps', 'nodejs', 'current', 'bin'));
+      paths.push(path.join(scoopDir, 'apps', 'nodejs', 'current'));
+    } else if (home) {
+      paths.push(path.join(home, 'scoop', 'shims'));
+      paths.push(path.join(home, 'scoop', 'apps', 'nodejs', 'current', 'bin'));
+      paths.push(path.join(home, 'scoop', 'apps', 'nodejs', 'current'));
+    }
 
     // Docker
     paths.push(path.join(programFiles, 'Docker', 'Docker', 'resources', 'bin'));
@@ -77,23 +136,72 @@ function getExtraBinaryPaths(): string[] {
 }
 
 /**
+ * Searches for the Node.js executable in common installation locations.
+ * Returns the directory containing node, or null if not found.
+ */
+export function findNodeDirectory(): string | null {
+  const searchPaths = getExtraBinaryPaths();
+
+  // Also check current PATH
+  const currentPath = process.env.PATH || '';
+  const pathDirs = currentPath.split(PATH_SEPARATOR).filter(p => p);
+
+  // Search in extra paths first (more likely to have node), then current PATH
+  const allPaths = [...searchPaths, ...pathDirs];
+
+  for (const dir of allPaths) {
+    if (!dir) continue;
+    try {
+      const nodePath = path.join(dir, NODE_EXECUTABLE);
+      if (fs.existsSync(nodePath)) {
+        const stat = fs.statSync(nodePath);
+        if (stat.isFile()) {
+          return dir;
+        }
+      }
+    } catch {
+      // Skip inaccessible directories
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Checks if a CLI path requires Node.js to execute (i.e., is a .js file).
+ */
+export function cliPathRequiresNode(cliPath: string): boolean {
+  const jsExtensions = ['.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx'];
+  return jsExtensions.some(ext => cliPath.toLowerCase().endsWith(ext));
+}
+
+/**
  * Returns an enhanced PATH that includes common binary locations.
  * GUI apps like Obsidian have minimal PATH, so we need to add standard locations
  * where binaries like node, python, etc. are typically installed.
  *
  * @param additionalPaths - Optional additional PATH entries to include (from user config).
  *                          These take priority and are prepended.
+ * @param cliPath - Optional CLI path. If it's a .js file, we'll ensure Node.js is in PATH.
  */
-export function getEnhancedPath(additionalPaths?: string): string {
+export function getEnhancedPath(additionalPaths?: string, cliPath?: string): string {
   const extraPaths = getExtraBinaryPaths().filter(p => p); // Filter out empty
   const currentPath = process.env.PATH || '';
 
-  // Build path segments: additional (user config) > extra paths > current PATH
+  // Build path segments: additional (user config) > node dir (if needed) > extra paths > current PATH
   const segments: string[] = [];
 
   // Add user-specified paths first (highest priority)
   if (additionalPaths) {
     segments.push(...additionalPaths.split(PATH_SEPARATOR).filter(p => p));
+  }
+
+  // If CLI path is a .js file, ensure Node.js directory is in PATH
+  if (cliPath && cliPathRequiresNode(cliPath)) {
+    const nodeDir = findNodeDirectory();
+    if (nodeDir) {
+      segments.push(nodeDir);
+    }
   }
 
   // Add our extra paths

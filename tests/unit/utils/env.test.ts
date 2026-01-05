@@ -2,7 +2,12 @@
  * Tests for environment utilities.
  */
 
-import { getEnhancedPath, parseEnvironmentVariables } from '../../../src/utils/env';
+import * as fs from 'fs';
+import * as path from 'path';
+
+import * as env from '../../../src/utils/env';
+
+const { cliPathRequiresNode, findNodeDirectory, getEnhancedPath, parseEnvironmentVariables } = env;
 
 const isWindows = process.platform === 'win32';
 const SEP = isWindows ? ';' : ':';
@@ -220,5 +225,152 @@ describe('getEnhancedPath', () => {
       // Should have added some extra paths beyond just process.env.PATH
       expect(segments.length).toBeGreaterThan(1);
     });
+  });
+
+  describe('CLI path parameter for Node.js detection', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    function mockNodeExecutable(fakeDir: string) {
+      const nodePath = path.join(fakeDir, isWindows ? 'node.exe' : 'node');
+      jest.spyOn(fs, 'existsSync').mockImplementation(p => String(p) === nodePath);
+      jest.spyOn(fs, 'statSync').mockImplementation(
+        p => ({ isFile: () => String(p) === nodePath }) as fs.Stats
+      );
+      return nodePath;
+    }
+
+    it('prepends detected node directory before extra paths when cliPath is .js', () => {
+      const fakeDir = isWindows ? 'C:\\fake\\node' : '/tmp/fake-node';
+      mockNodeExecutable(fakeDir);
+
+      const otherPath = isWindows ? 'C:\\other' : '/other';
+      process.env.PATH = `${fakeDir}${SEP}${otherPath}`;
+      if (isWindows) {
+        process.env.ProgramFiles = 'C:\\Program Files';
+      }
+
+      const result = getEnhancedPath(undefined, '/path/to/cli.js');
+      const segments = result.split(SEP);
+      const extraPath = isWindows ? 'C:\\Program Files\\nodejs' : '/usr/local/bin';
+
+      const nodeIndex = segments.indexOf(fakeDir);
+      const extraIndex = segments.indexOf(extraPath);
+
+      expect(nodeIndex).toBeGreaterThanOrEqual(0);
+      expect(extraIndex).toBeGreaterThanOrEqual(0);
+      expect(nodeIndex).toBeLessThan(extraIndex);
+    });
+
+    it('does not prepend node directory when cliPath is native binary', () => {
+      const fakeDir = isWindows ? 'C:\\fake\\node' : '/tmp/fake-node';
+      mockNodeExecutable(fakeDir);
+
+      const otherPath = isWindows ? 'C:\\other' : '/other';
+      process.env.PATH = `${fakeDir}${SEP}${otherPath}`;
+      if (isWindows) {
+        process.env.ProgramFiles = 'C:\\Program Files';
+      }
+
+      const result = getEnhancedPath(undefined, '/path/to/claude.exe');
+      const segments = result.split(SEP);
+      const extraPath = isWindows ? 'C:\\Program Files\\nodejs' : '/usr/local/bin';
+
+      const nodeIndex = segments.indexOf(fakeDir);
+      const extraIndex = segments.indexOf(extraPath);
+
+      expect(nodeIndex).toBeGreaterThanOrEqual(0);
+      expect(extraIndex).toBeGreaterThanOrEqual(0);
+      expect(nodeIndex).toBeGreaterThan(extraIndex);
+    });
+
+    it('accepts cliPath parameter without error', () => {
+      const result = getEnhancedPath(undefined, '/path/to/cli.js');
+      expect(typeof result).toBe('string');
+      expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('works with both additionalPaths and cliPath', () => {
+      const result = getEnhancedPath('/custom/path', '/path/to/cli.js');
+      expect(result).toContain('/custom/path');
+    });
+
+    it('works with native binary path (no Node.js detection needed)', () => {
+      const result = getEnhancedPath(undefined, '/path/to/claude.exe');
+      expect(typeof result).toBe('string');
+    });
+  });
+});
+
+describe('cliPathRequiresNode', () => {
+  it('returns true for .js files', () => {
+    expect(cliPathRequiresNode('/path/to/cli.js')).toBe(true);
+    expect(cliPathRequiresNode('C:\\path\\to\\cli.js')).toBe(true);
+  });
+
+  it('returns true for other JS extensions', () => {
+    expect(cliPathRequiresNode('/path/to/cli.mjs')).toBe(true);
+    expect(cliPathRequiresNode('/path/to/cli.cjs')).toBe(true);
+    expect(cliPathRequiresNode('/path/to/cli.ts')).toBe(true);
+    expect(cliPathRequiresNode('/path/to/cli.tsx')).toBe(true);
+    expect(cliPathRequiresNode('/path/to/cli.jsx')).toBe(true);
+  });
+
+  it('returns false for native binaries', () => {
+    expect(cliPathRequiresNode('/path/to/claude')).toBe(false);
+    expect(cliPathRequiresNode('/path/to/claude.exe')).toBe(false);
+    expect(cliPathRequiresNode('C:\\path\\to\\claude.exe')).toBe(false);
+  });
+
+  it('returns false for .cmd files', () => {
+    expect(cliPathRequiresNode('/path/to/claude.cmd')).toBe(false);
+  });
+
+  it('is case-insensitive', () => {
+    expect(cliPathRequiresNode('/path/to/CLI.JS')).toBe(true);
+    expect(cliPathRequiresNode('/path/to/cli.MJS')).toBe(true);
+  });
+});
+
+describe('findNodeDirectory', () => {
+  const originalEnv = { ...process.env };
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    Object.keys(process.env).forEach(key => delete process.env[key]);
+    Object.assign(process.env, originalEnv);
+  });
+
+  it('returns string or null', () => {
+    const result = findNodeDirectory();
+    expect(result === null || typeof result === 'string').toBe(true);
+  });
+
+  it('returns a non-empty string when node is found', () => {
+    const result = findNodeDirectory();
+    // On most dev machines, node should be findable
+    // Result is either null (not found) or a non-empty directory path
+    const isValidResult = result === null || (typeof result === 'string' && result.length > 0);
+    expect(isValidResult).toBe(true);
+  });
+
+  it('uses NVM_SYMLINK when set on Windows', () => {
+    if (!isWindows) {
+      return;
+    }
+
+    const nvmSymlink = 'C:\\nvm\\symlink';
+    const nodePath = path.join(nvmSymlink, 'node.exe');
+    jest.spyOn(fs, 'existsSync').mockImplementation(p => String(p) === nodePath);
+    jest.spyOn(fs, 'statSync').mockImplementation(
+      p => ({ isFile: () => String(p) === nodePath }) as fs.Stats
+    );
+
+    process.env.NVM_SYMLINK = nvmSymlink;
+    process.env.PATH = '';
+
+    const result = findNodeDirectory();
+    expect(result).toBe(nvmSymlink);
   });
 });

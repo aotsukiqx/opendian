@@ -120,7 +120,7 @@ Generate a title for this conversation:`;
       env: {
         ...process.env,
         ...customEnv,
-        PATH: getEnhancedPath(customEnv.PATH),
+        PATH: getEnhancedPath(customEnv.PATH, this.resolvedClaudePath ?? undefined),
       },
       allowedTools: [], // No tools needed for title generation
       permissionMode: 'bypassPermissions',
