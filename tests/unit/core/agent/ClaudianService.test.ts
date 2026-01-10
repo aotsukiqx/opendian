@@ -159,34 +159,6 @@ describe('ClaudianService', () => {
     });
   });
 
-  describe('Diff Data Management', () => {
-    it('should get diff data for tool use ID', () => {
-      const diffData = { tool_use_id: 'tool-123', content: 'test diff' };
-      (service as any).diffStore.pendingDiffData.set('tool-123', diffData);
-
-      const result = service.getDiffData('tool-123');
-
-      expect(result).toEqual(diffData);
-      expect((service as any).diffStore.pendingDiffData.has('tool-123')).toBe(false);
-    });
-
-    it('should return undefined for non-existent diff data', () => {
-      const result = service.getDiffData('non-existent');
-
-      expect(result).toBeUndefined();
-    });
-
-    it('should clear diff state', () => {
-      (service as any).diffStore.originalContents.set('file.md', { content: 'test' });
-      (service as any).diffStore.pendingDiffData.set('tool-123', { tool_use_id: 'tool-123' });
-
-      service.clearDiffState();
-
-      expect((service as any).diffStore.originalContents.size).toBe(0);
-      expect((service as any).diffStore.pendingDiffData.size).toBe(0);
-    });
-  });
-
   describe('Query Cancellation', () => {
     it('should cancel cold-start query', () => {
       const abortSpy = jest.fn();
