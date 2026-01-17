@@ -1,7 +1,7 @@
 {
   "name": "opencode",
   "version": "1.0.0",
-  "description": "OpenCode AI embedded in Obsidian sidebar",
+  "description": "OpenCode plugin that embeds OpenCode as sidebar chat with full agentic capabilities.",
   "main": "main.js",
   "scripts": {
     "build:css": "node scripts/build-css.mjs",
@@ -21,7 +21,7 @@
     "ai",
     "agent"
   ],
-  "author": "Yishen Tu",
+  "author": "Colin.L",
   "license": "MIT",
   "devDependencies": {
     "@types/jest": "^30.0.0",
