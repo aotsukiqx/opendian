@@ -1,11 +1,11 @@
 /**
- * PluginManager - Manage Claude Code plugin state and SDK configuration.
+ * PluginManager - Manage Claude Code/OpenCode plugin state and SDK configuration.
  *
  * Coordinates plugin discovery from PluginStorage and manages enabled state.
  */
 
 import type { ClaudianPlugin, SdkPluginConfig } from '../types';
-import type { PluginStorage } from './PluginStorage';
+import type { PluginBackend, PluginStorage } from './PluginStorage';
 
 export class PluginManager {
   private storage: PluginStorage;
@@ -46,6 +46,30 @@ export class PluginManager {
     for (const plugin of this.plugins) {
       plugin.enabled = this.enabledPluginIds.has(plugin.id);
     }
+  }
+
+  /**
+   * Switch backend and reload plugins.
+   * Clears enabled plugins since they are backend-specific.
+   */
+  async setBackend(backend: PluginBackend): Promise<void> {
+    // Clear enabled plugins when switching backend
+    this.enabledPluginIds.clear();
+
+    // Reload plugins for the new backend
+    this.plugins = this.storage.reloadForBackendChange(backend);
+
+    // Apply enabled state (all false since we cleared enabledPluginIds)
+    for (const plugin of this.plugins) {
+      plugin.enabled = false;
+    }
+  }
+
+  /**
+   * Get the current backend type.
+   */
+  getBackend(): PluginBackend {
+    return this.storage.getBackend();
   }
 
   /**

@@ -24,9 +24,13 @@ export class PluginSettingsManager {
   private render() {
     this.containerEl.empty();
 
+    // Determine title based on backend
+    const isOpenCode = this.plugin.settings.agentBackend === 'opencode';
+    const backendLabel = isOpenCode ? 'OpenCode' : 'Claude Code';
+
     // Header with refresh button
     const headerEl = this.containerEl.createDiv({ cls: 'opencode-plugin-header' });
-    headerEl.createSpan({ text: 'Claude Code Plugins', cls: 'opencode-plugin-label' });
+    headerEl.createSpan({ text: `${backendLabel} Plugins`, cls: 'opencode-plugin-label' });
 
     const refreshBtn = headerEl.createEl('button', {
       cls: 'opencode-settings-action-btn',
@@ -40,7 +44,10 @@ export class PluginSettingsManager {
     // Empty state
     if (plugins.length === 0) {
       const emptyEl = this.containerEl.createDiv({ cls: 'opencode-plugin-empty' });
-      emptyEl.setText('No Claude Code plugins installed. Install plugins via the Claude CLI.');
+      const installHint = isOpenCode
+        ? 'Install plugins via the OpenCode CLI (opencode plugins install <name>).'
+        : 'Install plugins via the Claude Code CLI (claude plugins install <name>).';
+      emptyEl.setText(`No ${backendLabel} plugins installed. ${installHint}`);
       return;
     }
 

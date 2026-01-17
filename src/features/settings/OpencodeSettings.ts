@@ -505,6 +505,9 @@ export class OpencodeSettingTab extends PluginSettingTab {
             this.plugin.settings.agentBackend = value;
             await this.plugin.saveSettings();
 
+            // Handle plugin backend change
+            await this.plugin.handleBackendChange(value);
+
             // Show notice about requiring restart
             new Notice('Backend changed. Please reload the plugin (Ctrl/Cmd+R) for changes to take effect.');
           });

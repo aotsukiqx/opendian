@@ -97,7 +97,7 @@
     },
     "plugins": {
       "name": "OpenCode Plugins",
-      "desc": "Enable or disable plugins discovered from ~/.opencode/plugins. Enabled plugins are stored per vault."
+      "desc": "Enable or disable plugins discovered from the current backend. Enabled state is saved in Vault settings."
     },
     "safety": "Safety",
     "loadUserSettings": {

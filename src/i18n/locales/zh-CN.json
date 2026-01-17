@@ -97,7 +97,7 @@
     },
     "plugins": {
       "name": "OpenCode 插件",
-      "desc": "启用或禁用从 ~/.opencode/plugins 发现的插件。启用的插件按 Vault 存储。"
+      "desc": "启用或禁用从当前后端发现的插件。启用状态将保存在 Vault 设置中。"
     },
     "safety": "安全",
     "loadUserSettings": {

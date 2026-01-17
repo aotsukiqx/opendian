@@ -78,7 +78,7 @@ export default class ClaudianPlugin extends Plugin {
 
     // Initialize plugin manager
     const vaultPath = (this.app.vault.adapter as any).basePath;
-    const pluginStorage = new PluginStorage(vaultPath);
+    const pluginStorage = new PluginStorage(vaultPath, this.settings.agentBackend);
     this.pluginManager = new PluginManager(pluginStorage);
     this.pluginManager.setEnabledPluginIds(this.settings.enabledPlugins);
     await this.pluginManager.loadPlugins();
@@ -446,6 +446,26 @@ export default class ClaudianPlugin extends Plugin {
 
     // Merge vault commands with plugin commands
     this.settings.slashCommands = [...vaultCommands, ...pluginCommands];
+  }
+
+  /**
+   * Handles backend changes by updating plugin storage and reloading plugins.
+   */
+  async handleBackendChange(newBackend: 'claude-code' | 'opencode'): Promise<void> {
+    // Update plugin manager backend and reload plugins
+    await this.pluginManager.setBackend(newBackend);
+
+    // Clear plugin slash commands and reload
+    this.settings.slashCommands = this.settings.slashCommands.filter(
+      cmd => !cmd.id.startsWith('plugin-')
+    );
+    this.loadPluginSlashCommands();
+
+    // Restart persistent query to apply changes
+    const view = this.getView();
+    await view?.getTabManager()?.broadcastToAllTabs(
+      (service) => service.restartPersistentQuery()
+    );
   }
 
   /** Updates and persists environment variables, notifying if restart is needed. */

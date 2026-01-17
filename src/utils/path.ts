@@ -674,6 +674,58 @@ export function isPathInAllowedContextPaths(
 
 export type PathAccessType = 'vault' | 'readwrite' | 'context' | 'export' | 'none';
 
+// ============================================
+// OpenCode Configuration Paths
+// ============================================
+
+/**
+ * Gets the OpenCode configuration directory with cross-platform support.
+ *
+ * Priority:
+ * 1. OPENCODE_CONFIG_HOME env var (if set)
+ * 2. XDG_CONFIG_HOME/opencode (if XDG_CONFIG_HOME is set)
+ * 3. Platform default:
+ *    - macOS/Linux: ~/.config/opencode
+ *    - Windows: %APPDATA%/opencode
+ */
+export function getOpencodeConfigDir(): string {
+  // Check OPENCODE_CONFIG_HOME first
+  if (process.env.OPENCODE_CONFIG_HOME) {
+    return path.join(process.env.OPENCODE_CONFIG_HOME, 'opencode');
+  }
+
+  // Check XDG_CONFIG_HOME
+  if (process.env.XDG_CONFIG_HOME) {
+    return path.join(process.env.XDG_CONFIG_HOME, 'opencode');
+  }
+
+  // Platform-specific default
+  if (process.platform === 'win32') {
+    const appData = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
+    return path.join(appData, 'opencode');
+  }
+
+  // Unix/macOS default
+  return path.join(os.homedir(), '.config', 'opencode');
+}
+
+/**
+ * Gets the Claude Code configuration directory with cross-platform support.
+ *
+ * Platform default:
+ * - macOS/Linux: ~/.claude
+ * - Windows: %APPDATA%/Claude
+ */
+export function getClaudeCodeConfigDir(): string {
+  if (process.platform === 'win32') {
+    const appData = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
+    return path.join(appData, 'Claude');
+  }
+
+  // Unix/macOS default
+  return path.join(os.homedir(), '.claude');
+}
+
 /**
  * Resolve access type for a candidate path with context/export overlap handling.
  * The most specific matching root wins; exact context+export matches are read-write.

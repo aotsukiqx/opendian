@@ -313,6 +313,16 @@ export class InputController {
       };
     }
 
+    // Only set the model from settings if not already specified by slash command
+    // This preserves command-specific models while still using settings.model for regular messages
+    if (plugin.settings.model) {
+      if (!queryOptions) {
+        queryOptions = { model: plugin.settings.model };
+      } else if (!queryOptions.model) {
+        queryOptions = { ...queryOptions, model: plugin.settings.model };
+      }
+    }
+
     let wasInterrupted = false;
     let wasInvalidated = false;
 

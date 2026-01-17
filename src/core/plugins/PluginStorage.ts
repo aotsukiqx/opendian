@@ -1,15 +1,20 @@
 /**
- * PluginStorage - Read Claude Code plugins from global registry.
+ * PluginStorage - Read plugins from Claude Code or OpenCode registry.
  *
- * Reads installed_plugins.json from ~/.claude/plugins/ and filters
- * entries by projectPath against the current vault.
+ * Supports both backends with cross-platform path handling:
+ * - Claude Code: ~/.claude/plugins/installed_plugins.json
+ * - OpenCode: Reads plugin array from opencode.json (npm packages)
  */
 
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
-import { normalizePathForComparison } from '../../utils/path';
+import {
+  getOpencodeConfigDir,
+  getClaudeCodeConfigDir,
+  normalizePathForComparison,
+} from '../../utils/path';
 import { parseSlashCommandContent } from '../../utils/slashCommand';
 import type {
   ClaudeModel,
@@ -17,25 +22,34 @@ import type {
   InstalledPluginEntry,
   InstalledPluginsFile,
   MarketplaceManifest,
+  MarketplacePluginEntry,
   PluginManifest,
   PluginScope,
   SlashCommand,
 } from '../types';
 
-/** Path to the global installed plugins registry. */
-const INSTALLED_PLUGINS_PATH = path.join(os.homedir(), '.claude', 'plugins', 'installed_plugins.json');
+/** Backend type for plugin storage */
+export type PluginBackend = 'claude-code' | 'opencode';
 
-/** Plugin manifest filename (single-plugin). */
+// ============================================
+// Claude Code Plugin Storage
+// ============================================
+
+/** Path to Claude Code's installed plugins registry */
+const CLAUDE_CODE_PLUGINS_PATH = 'plugins';
+const CLAUDE_CODE_INSTALLED_PLUGINS_FILE = 'installed_plugins.json';
+
+/** Plugin manifest filename (single-plugin) */
 const PLUGIN_MANIFEST_FILE = 'plugin.json';
 
-/** Marketplace manifest filename (multi-plugin). */
+/** Marketplace manifest filename (multi-plugin) */
 const MARKETPLACE_MANIFEST_FILE = 'marketplace.json';
 
-/** Plugin directory name. */
-const PLUGIN_DIR_NAME = '.claude-plugin';
+/** Plugin directory name (Claude Code) */
+const CLAUDE_PLUGIN_DIR_NAME = '.claude-plugin';
 
 /**
- * Validate a single plugin entry from the registry.
+ * Validate a single plugin entry from the Claude Code registry.
  */
 function isValidPluginEntry(entry: unknown): entry is InstalledPluginEntry {
   if (typeof entry !== 'object' || entry === null) return false;
@@ -70,7 +84,6 @@ function parseInstalledPluginsFile(content: string): { data: InstalledPluginsFil
       if (!Array.isArray(entries)) {
         continue;
       }
-      // Filter out invalid entries silently
       data.plugins[pluginId] = entries.filter((entry) => isValidPluginEntry(entry));
     }
 
@@ -268,14 +281,14 @@ function shouldIncludeEntry(entry: InstalledPluginEntry, vaultPath: string): boo
 }
 
 /**
- * Load plugin manifest (single-plugin or marketplace).
+ * Load plugin manifest (single-plugin or marketplace) for Claude Code.
  */
-function loadPluginManifest(installPath: string, pluginId: string): {
+function loadClaudePluginManifest(installPath: string, pluginId: string): {
   manifest: PluginManifest | null;
   pluginPath: string;
   error?: string;
 } {
-  const pluginDir = path.join(installPath, PLUGIN_DIR_NAME);
+  const pluginDir = path.join(installPath, CLAUDE_PLUGIN_DIR_NAME);
 
   // Check if plugin directory exists
   if (!fs.existsSync(pluginDir)) {
@@ -321,7 +334,7 @@ function loadPluginManifest(installPath: string, pluginId: string): {
       // Plugin ID format: "name@marketplace" - we need to match by name
       const pluginName = pluginId.replace(/@.*$/, ''); // Remove @source suffix
 
-      const matchingPlugin = marketplaceManifest.plugins.find((p) => {
+      const matchingPlugin = marketplaceManifest.plugins.find((p: MarketplacePluginEntry) => {
         const normalizedName = p.name.toLowerCase().replace(/\s+/g, '-');
         return normalizedName === pluginName.toLowerCase();
       });
@@ -366,95 +379,255 @@ function loadPluginManifest(installPath: string, pluginId: string): {
   };
 }
 
-export class PluginStorage {
-  private vaultPath: string;
+/**
+ * Load plugins from Claude Code registry.
+ */
+function loadClaudeCodePlugins(vaultPath: string): ClaudianPlugin[] {
+  const configDir = getClaudeCodeConfigDir();
+  const pluginsDir = path.join(configDir, CLAUDE_CODE_PLUGINS_PATH);
+  const installedPluginsFile = path.join(pluginsDir, CLAUDE_CODE_INSTALLED_PLUGINS_FILE);
 
-  constructor(vaultPath: string) {
-    this.vaultPath = vaultPath;
+  // Read the global registry
+  try {
+    if (!fs.existsSync(installedPluginsFile)) {
+      return [];
+    }
+  } catch {
+    return [];
   }
 
-  /**
-   * Load all plugins from the global registry.
-   * Filters by projectPath against the current vault.
-   */
-  loadPlugins(): ClaudianPlugin[] {
-    // Read the global registry
-    const content = this.readInstalledPluginsFile();
-    if (!content) {
-      return [];
+  let content: string;
+  try {
+    content = fs.readFileSync(installedPluginsFile, 'utf-8');
+  } catch {
+    return [];
+  }
+
+  const { data: pluginsFile } = parseInstalledPluginsFile(content);
+  if (!pluginsFile) {
+    return [];
+  }
+
+  const plugins: ClaudianPlugin[] = [];
+
+  for (const [pluginId, entries] of Object.entries(pluginsFile.plugins)) {
+    // Filter entries for this vault
+    const applicableEntries = entries.filter((entry) =>
+      shouldIncludeEntry(entry, vaultPath)
+    );
+
+    if (applicableEntries.length === 0) {
+      continue;
     }
 
-    const { data: pluginsFile } = parseInstalledPluginsFile(content);
-    if (!pluginsFile) {
-      return [];
-    }
+    // Pick the newest entry
+    const entry = pickNewestEntry(applicableEntries);
+    if (!entry) continue;
 
-    const plugins: ClaudianPlugin[] = [];
+    // Load manifest and determine plugin path
+    const { manifest, pluginPath, error } = loadClaudePluginManifest(entry.installPath, pluginId);
 
-    for (const [pluginId, entries] of Object.entries(pluginsFile.plugins)) {
-      // Filter entries for this vault
-      const applicableEntries = entries.filter((entry) =>
-        shouldIncludeEntry(entry, this.vaultPath)
-      );
+    const scope = determineScope(entry);
 
-      if (applicableEntries.length === 0) {
-        continue;
-      }
+    // Check if install path exists
+    const installPathExists = fs.existsSync(entry.installPath);
 
-      // Pick the newest entry
-      const entry = pickNewestEntry(applicableEntries);
-      if (!entry) continue;
+    const status = determinePluginStatus(installPathExists, error);
+    const errorMessage = !installPathExists ? 'Plugin directory not found' : error;
 
-      // Load manifest and determine plugin path
-      const { manifest, pluginPath, error } = loadPluginManifest(entry.installPath, pluginId);
-
-      const scope = determineScope(entry);
-
-      // Check if install path exists
-      const installPathExists = fs.existsSync(entry.installPath);
-
-      const status = determinePluginStatus(installPathExists, error);
-      const errorMessage = !installPathExists ? 'Plugin directory not found' : error;
-
-      plugins.push({
-        id: pluginId,
-        name: manifest?.name ?? pluginId,
-        description: manifest?.description,
-        version: entry.version,
-        installPath: entry.installPath,
-        pluginPath: pluginPath || entry.installPath,
-        scope,
-        projectPath: entry.projectPath,
-        enabled: false, // Will be set by PluginManager
-        status,
-        error: errorMessage,
-      });
-    }
-
-    // Sort: project/local first, then user
-    return plugins.sort((a, b) => {
-      const scopeOrder = { local: 0, project: 1, user: 2 };
-      return scopeOrder[a.scope] - scopeOrder[b.scope];
+    plugins.push({
+      id: pluginId,
+      name: manifest?.name ?? pluginId,
+      description: manifest?.description,
+      version: entry.version,
+      installPath: entry.installPath,
+      pluginPath: pluginPath || entry.installPath,
+      scope,
+      projectPath: entry.projectPath,
+      enabled: false, // Will be set by PluginManager
+      status,
+      error: errorMessage,
     });
   }
 
-  /**
-   * Read the installed_plugins.json file.
-   */
-  private readInstalledPluginsFile(): string | null {
-    try {
-      if (!fs.existsSync(INSTALLED_PLUGINS_PATH)) {
-        return null;
-      }
-      return fs.readFileSync(INSTALLED_PLUGINS_PATH, 'utf-8');
-    } catch {
-      return null;
+  // Sort: project/local first, then user
+  return plugins.sort((a, b) => {
+    const scopeOrder = { local: 0, project: 1, user: 2 };
+    return scopeOrder[a.scope] - scopeOrder[b.scope];
+  });
+}
+
+// ============================================
+// OpenCode Plugin Storage
+// ============================================
+
+/**
+ * Load plugins from OpenCode configuration.
+ * OpenCode plugins are specified in opencode.json's "plugin" array (npm packages).
+ */
+function loadOpenCodePlugins(vaultPath: string): ClaudianPlugin[] {
+  const configDir = getOpencodeConfigDir();
+  const configFile = path.join(configDir, 'opencode.json');
+
+  const plugins: ClaudianPlugin[] = [];
+
+  // Read opencode.json to get plugin list
+  const { data: config, error } = readJsonFile<{ plugin?: string[] }>(configFile);
+  if (error || !config?.plugin || !Array.isArray(config.plugin)) {
+    return plugins;
+  }
+
+  // Project-level plugins from .opencode/opencode.json
+  const projectConfigFile = path.join(vaultPath, '.opencode', 'opencode.json');
+  const { data: projectConfig } = readJsonFile<{ plugin?: string[] }>(projectConfigFile);
+
+  const globalPlugins = config.plugin;
+  const projectPlugins = projectConfig?.plugin || [];
+
+  // Combine global and project plugins, project plugins override global
+  const allPlugins = [...globalPlugins];
+
+  for (const projectPlugin of projectPlugins) {
+    // Remove global version if exists
+    const existingIndex = allPlugins.findIndex(
+      p => getPluginBaseName(p) === getPluginBaseName(projectPlugin)
+    );
+    if (existingIndex >= 0) {
+      allPlugins[existingIndex] = projectPlugin;
+    } else {
+      allPlugins.push(projectPlugin);
     }
+  }
+
+  for (const pluginName of allPlugins) {
+    const baseName = getPluginBaseName(pluginName);
+    const pluginId = `${baseName}@opencode`;
+
+    // Determine scope based on whether it's in project config
+    const isProjectPlugin = projectPlugins.some(p => getPluginBaseName(p) === baseName);
+    const scope: PluginScope = isProjectPlugin ? 'project' : 'user';
+
+    plugins.push({
+      id: pluginId,
+      name: baseName,
+      description: `NPM package: ${pluginName}`,
+      version: extractVersion(pluginName),
+      installPath: path.join(configDir, 'node_modules', baseName),
+      pluginPath: path.join(configDir, 'node_modules', baseName),
+      scope,
+      projectPath: isProjectPlugin ? vaultPath : undefined,
+      enabled: false,
+      status: 'available',
+    });
+  }
+
+  return plugins;
+}
+
+/**
+ * Get the base name of a plugin (without version suffix).
+ */
+function getPluginBaseName(pluginName: string): string {
+  // Handle scoped packages like @org/plugin
+  const atIndex = pluginName.indexOf('@');
+  if (atIndex > 0) {
+    // Scoped package: @org/plugin or @org/plugin@version
+    const scopeEnd = pluginName.indexOf('/', atIndex);
+    if (scopeEnd > 0) {
+      const scope = pluginName.substring(atIndex, scopeEnd + 1);
+      const nameEnd = pluginName.indexOf('@', scopeEnd + 1);
+      if (nameEnd > 0) {
+        return pluginName.substring(0, nameEnd);
+      }
+      return pluginName;
+    }
+  }
+  // Unscoped package: plugin or plugin@version
+  const versionIndex = pluginName.lastIndexOf('@');
+  if (versionIndex > 0) {
+    return pluginName.substring(0, versionIndex);
+  }
+  return pluginName;
+}
+
+/**
+ * Extract version from plugin string.
+ */
+function extractVersion(pluginName: string): string {
+  // Handle scoped packages like @org/plugin@version
+  const atIndex = pluginName.indexOf('@');
+  if (atIndex > 0) {
+    const scopeEnd = pluginName.indexOf('/', atIndex);
+    if (scopeEnd > 0) {
+      const afterScope = pluginName.substring(scopeEnd + 1);
+      const versionIndex = afterScope.indexOf('@');
+      if (versionIndex >= 0) {
+        return afterScope.substring(versionIndex + 1);
+      }
+      return 'latest';
+    }
+  }
+  // Unscoped package
+  const versionIndex = pluginName.lastIndexOf('@');
+  if (versionIndex > 0) {
+    return pluginName.substring(versionIndex + 1);
+  }
+  return 'latest';
+}
+
+// ============================================
+// Unified PluginStorage Class
+// ============================================
+
+export class PluginStorage {
+  private vaultPath: string;
+  private backend: PluginBackend;
+
+  constructor(vaultPath: string, backend: PluginBackend = 'claude-code') {
+    this.vaultPath = vaultPath;
+    this.backend = backend;
+  }
+
+  /**
+   * Load all plugins based on the configured backend.
+   */
+  loadPlugins(): ClaudianPlugin[] {
+    switch (this.backend) {
+      case 'opencode':
+        return loadOpenCodePlugins(this.vaultPath);
+      case 'claude-code':
+      default:
+        return loadClaudeCodePlugins(this.vaultPath);
+    }
+  }
+
+  /**
+   * Update the backend and reload plugins.
+   */
+  setBackend(backend: PluginBackend): ClaudianPlugin[] {
+    this.backend = backend;
+    return this.loadPlugins();
+  }
+
+  /**
+   * Get the current backend type.
+   */
+  getBackend(): PluginBackend {
+    return this.backend;
+  }
+
+  /**
+   * Reload plugins after backend change.
+   * Returns the newly loaded plugins.
+   */
+  reloadForBackendChange(backend: PluginBackend): ClaudianPlugin[] {
+    this.backend = backend;
+    return this.loadPlugins();
   }
 }
 
 /**
- * Load slash commands from a plugin install directory.
+ * Load slash commands from a plugin install directory (Claude Code format).
  * Looks for commands in {installPath}/commands/*.md
  */
 export function loadPluginCommands(
