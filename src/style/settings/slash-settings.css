@@ -1,9 +1,9 @@
 /* Slash Command Settings */
-.claudian-slash-settings-desc {
+.opencode-slash-settings-desc {
   margin-bottom: 12px;
 }
 
-.claudian-slash-header {
+.opencode-slash-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -11,18 +11,18 @@
   padding: 0 12px;
 }
 
-.claudian-slash-label {
+.opencode-slash-label {
   font-size: var(--font-ui-small);
   color: var(--text-muted);
   font-weight: var(--font-medium);
 }
 
-.claudian-slash-header-actions {
+.opencode-slash-header-actions {
   display: flex;
   gap: 4px;
 }
 
-.claudian-add-slash-btn {
+.opencode-add-slash-btn {
   padding: 4px 12px;
   font-size: 12px;
   background: var(--interactive-accent);
@@ -32,12 +32,12 @@
   cursor: pointer;
 }
 
-.claudian-add-slash-btn:hover {
+.opencode-add-slash-btn:hover {
   opacity: 0.9;
 }
 
-.claudian-export-btn,
-.claudian-import-btn {
+.opencode-export-btn,
+.opencode-import-btn {
   padding: 4px 12px;
   font-size: 12px;
   background: var(--background-modifier-border);
@@ -47,12 +47,12 @@
   cursor: pointer;
 }
 
-.claudian-export-btn:hover,
-.claudian-import-btn:hover {
+.opencode-export-btn:hover,
+.opencode-import-btn:hover {
   background: var(--background-modifier-border-hover);
 }
 
-.claudian-slash-empty-state {
+.opencode-slash-empty-state {
   padding: 20px;
   text-align: center;
   color: var(--text-muted);
@@ -61,14 +61,14 @@
   margin-top: 8px;
 }
 
-.claudian-slash-list {
+.opencode-slash-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-top: 8px;
 }
 
-.claudian-slash-item-settings {
+.opencode-slash-item-settings {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -77,40 +77,40 @@
   border-radius: 6px;
 }
 
-.claudian-slash-item-settings:hover {
+.opencode-slash-item-settings:hover {
   background: var(--background-modifier-hover);
 }
 
-.claudian-slash-info {
+.opencode-slash-info {
   flex: 1;
   min-width: 0;
 }
 
-.claudian-slash-item-header {
+.opencode-slash-item-header {
   display: flex;
   align-items: baseline;
   gap: 8px;
 }
 
-.claudian-slash-item-name {
+.opencode-slash-item-name {
   font-weight: 600;
   font-family: var(--font-monospace);
   color: var(--text-normal);
 }
 
-.claudian-slash-item-hint {
+.opencode-slash-item-hint {
   font-size: 12px;
   color: var(--text-muted);
   font-style: italic;
 }
 
-.claudian-slash-item-desc {
+.opencode-slash-item-desc {
   font-size: 13px;
   color: var(--text-muted);
   margin-top: 2px;
 }
 
-.claudian-slash-item-preview {
+.opencode-slash-item-preview {
   font-size: 12px;
   color: var(--text-faint);
   font-family: var(--font-monospace);
@@ -120,14 +120,14 @@
   white-space: nowrap;
 }
 
-.claudian-slash-item-actions {
+.opencode-slash-item-actions {
   display: flex;
   gap: 4px;
   margin-left: 16px;
   flex-shrink: 0;
 }
 
-.claudian-edit-slash-btn {
+.opencode-edit-slash-btn {
   padding: 4px 12px;
   font-size: 12px;
   background: var(--background-modifier-border);
@@ -137,11 +137,11 @@
   cursor: pointer;
 }
 
-.claudian-edit-slash-btn:hover {
+.opencode-edit-slash-btn:hover {
   background: var(--background-modifier-border-hover);
 }
 
-.claudian-delete-slash-btn {
+.opencode-delete-slash-btn {
   padding: 4px 12px;
   font-size: 12px;
   background: var(--background-modifier-error);
@@ -151,17 +151,17 @@
   cursor: pointer;
 }
 
-.claudian-delete-slash-btn:hover {
+.opencode-delete-slash-btn:hover {
   opacity: 0.9;
 }
 
 /* Slash Command Modal */
-.claudian-slash-modal .modal-content {
+.opencode-slash-modal .modal-content {
   max-width: 600px;
   width: auto;
 }
 
-.claudian-slash-content-area {
+.opencode-slash-content-area {
   width: 100%;
   font-family: var(--font-monospace);
   font-size: 13px;
@@ -174,12 +174,12 @@
   margin-top: 8px;
 }
 
-.claudian-slash-content-area:focus {
+.opencode-slash-content-area:focus {
   outline: none;
   border-color: var(--interactive-accent);
 }
 
-.claudian-slash-modal-buttons {
+.opencode-slash-modal-buttons {
   display: flex;
   gap: 8px;
   margin-top: 16px;

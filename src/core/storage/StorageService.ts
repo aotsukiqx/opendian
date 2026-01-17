@@ -32,10 +32,10 @@ import {
 } from '../types';
 import { CC_SETTINGS_PATH, CCSettingsStorage, isLegacyPermissionsFormat } from './CCSettingsStorage';
 import {
-  ClaudianSettingsStorage,
+  OpencodeSettingsStorage,
   normalizeBlockedCommands,
-  type StoredClaudianSettings,
-} from './ClaudianSettingsStorage';
+  type StoredOpencodeSettings,
+} from './OpencodeSettingsStorage';
 import { McpStorage } from './McpStorage';
 import {
   CLAUDIAN_ONLY_FIELDS,
@@ -60,7 +60,7 @@ export interface CombinedSettings {
   /** CC-compatible settings (permissions, etc.) */
   cc: CCSettings;
   /** Claudian-specific settings */
-  claudian: StoredClaudianSettings;
+  claudian: StoredOpencodeSettings;
 }
 
 /** Legacy data format (pre-split migration). */
@@ -109,7 +109,7 @@ interface LegacyDataJson {
 
 export class StorageService {
   readonly ccSettings: CCSettingsStorage;
-  readonly claudianSettings: ClaudianSettingsStorage;
+  readonly claudianSettings: OpencodeSettingsStorage;
   readonly commands: SlashCommandStorage;
   readonly sessions: SessionStorage;
   readonly mcp: McpStorage;
@@ -123,7 +123,7 @@ export class StorageService {
     this.app = plugin.app;
     this.adapter = new VaultFileAdapter(this.app);
     this.ccSettings = new CCSettingsStorage(this.adapter);
-    this.claudianSettings = new ClaudianSettingsStorage(this.adapter);
+    this.claudianSettings = new OpencodeSettingsStorage(this.adapter);
     this.commands = new SlashCommandStorage(this.adapter);
     this.sessions = new SessionStorage(this.adapter);
     this.mcp = new McpStorage(this.adapter);
@@ -235,21 +235,21 @@ export class StorageService {
     }
 
     // Extract Claudian-specific fields
-    const claudianFields: Partial<StoredClaudianSettings> = {
+    const claudianFields: Partial<StoredOpencodeSettings> = {
       userName: oldSettings.userName ?? DEFAULT_SETTINGS.userName,
       enableBlocklist: oldSettings.enableBlocklist ?? DEFAULT_SETTINGS.enableBlocklist,
       blockedCommands: normalizeBlockedCommands(oldSettings.blockedCommands),
       model: (oldSettings.model as ClaudeModel) ?? DEFAULT_SETTINGS.model,
-      thinkingBudget: (oldSettings.thinkingBudget as StoredClaudianSettings['thinkingBudget']) ?? DEFAULT_SETTINGS.thinkingBudget,
-      permissionMode: (oldSettings.permissionMode as StoredClaudianSettings['permissionMode']) ?? DEFAULT_SETTINGS.permissionMode,
+      thinkingBudget: (oldSettings.thinkingBudget as StoredOpencodeSettings['thinkingBudget']) ?? DEFAULT_SETTINGS.thinkingBudget,
+      permissionMode: (oldSettings.permissionMode as StoredOpencodeSettings['permissionMode']) ?? DEFAULT_SETTINGS.permissionMode,
       excludedTags: oldSettings.excludedTags ?? DEFAULT_SETTINGS.excludedTags,
       mediaFolder: oldSettings.mediaFolder ?? DEFAULT_SETTINGS.mediaFolder,
       environmentVariables, // Merged from both sources
-      envSnippets: oldSettings.envSnippets as StoredClaudianSettings['envSnippets'] ?? DEFAULT_SETTINGS.envSnippets,
+      envSnippets: oldSettings.envSnippets as StoredOpencodeSettings['envSnippets'] ?? DEFAULT_SETTINGS.envSnippets,
       systemPrompt: oldSettings.systemPrompt ?? DEFAULT_SETTINGS.systemPrompt,
       allowedExportPaths: oldSettings.allowedExportPaths ?? DEFAULT_SETTINGS.allowedExportPaths,
       persistentExternalContextPaths: DEFAULT_SETTINGS.persistentExternalContextPaths,
-      keyboardNavigation: oldSettings.keyboardNavigation as StoredClaudianSettings['keyboardNavigation'] ?? DEFAULT_SETTINGS.keyboardNavigation,
+      keyboardNavigation: oldSettings.keyboardNavigation as StoredOpencodeSettings['keyboardNavigation'] ?? DEFAULT_SETTINGS.keyboardNavigation,
       claudeCliPath: oldSettings.claudeCliPath ?? DEFAULT_SETTINGS.claudeCliPath,
       claudeCliPathsByHost: DEFAULT_SETTINGS.claudeCliPathsByHost,  // Migration to hostname-based handled in main.ts
       loadUserClaudeSettings: oldSettings.loadUserClaudeSettings ?? DEFAULT_SETTINGS.loadUserClaudeSettings,
@@ -261,7 +261,7 @@ export class StorageService {
     };
 
     // Save Claudian settings FIRST (before stripping from settings.json)
-    await this.claudianSettings.save(claudianFields as StoredClaudianSettings);
+    await this.claudianSettings.save(claudianFields as StoredOpencodeSettings);
 
     // Verify Claudian settings were saved
     const savedClaudian = await this.claudianSettings.load();
@@ -452,21 +452,21 @@ export class StorageService {
   /**
    * Update Claudian settings.
    */
-  async updateClaudianSettings(updates: Partial<StoredClaudianSettings>): Promise<void> {
+  async updateOpencodeSettings(updates: Partial<StoredOpencodeSettings>): Promise<void> {
     return this.claudianSettings.update(updates);
   }
 
   /**
    * Save Claudian settings.
    */
-  async saveClaudianSettings(settings: StoredClaudianSettings): Promise<void> {
+  async saveOpencodeSettings(settings: StoredOpencodeSettings): Promise<void> {
     return this.claudianSettings.save(settings);
   }
 
   /**
    * Load Claudian settings.
    */
-  async loadClaudianSettings(): Promise<StoredClaudianSettings> {
+  async loadOpencodeSettings(): Promise<StoredOpencodeSettings> {
     return this.claudianSettings.load();
   }
 

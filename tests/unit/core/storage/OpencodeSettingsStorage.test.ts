@@ -1,8 +1,8 @@
 import {
-  CLAUDIAN_SETTINGS_PATH,
-  ClaudianSettingsStorage,
+  OPENCODE_SETTINGS_PATH,
+  OpencodeSettingsStorage,
   normalizeBlockedCommands,
-} from '@/core/storage/ClaudianSettingsStorage';
+} from '@/core/storage/OpencodeSettingsStorage';
 import type { VaultFileAdapter } from '@/core/storage/VaultFileAdapter';
 import { DEFAULT_SETTINGS, getDefaultBlockedCommands } from '@/core/types';
 
@@ -13,8 +13,8 @@ const mockAdapter = {
   write: jest.fn(),
 } as unknown as VaultFileAdapter;
 
-describe('ClaudianSettingsStorage', () => {
-  let storage: ClaudianSettingsStorage;
+describe('OpencodeSettingsStorage', () => {
+  let storage: OpencodeSettingsStorage;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -22,7 +22,7 @@ describe('ClaudianSettingsStorage', () => {
     (mockAdapter.exists as jest.Mock).mockResolvedValue(false);
     (mockAdapter.read as jest.Mock).mockResolvedValue('{}');
     (mockAdapter.write as jest.Mock).mockResolvedValue(undefined);
-    storage = new ClaudianSettingsStorage(mockAdapter);
+    storage = new OpencodeSettingsStorage(mockAdapter);
   });
 
   describe('load', () => {
@@ -120,7 +120,7 @@ describe('ClaudianSettingsStorage', () => {
       await storage.save(storedSettings);
 
       expect(mockAdapter.write).toHaveBeenCalledWith(
-        CLAUDIAN_SETTINGS_PATH,
+        OPENCODE_SETTINGS_PATH,
         expect.any(String)
       );
       const writtenContent = JSON.parse((mockAdapter.write as jest.Mock).mock.calls[0][1]);
@@ -146,7 +146,7 @@ describe('ClaudianSettingsStorage', () => {
       const result = await storage.exists();
 
       expect(result).toBe(true);
-      expect(mockAdapter.exists).toHaveBeenCalledWith(CLAUDIAN_SETTINGS_PATH);
+      expect(mockAdapter.exists).toHaveBeenCalledWith(OPENCODE_SETTINGS_PATH);
     });
 
     it('should return false when file does not exist', async () => {

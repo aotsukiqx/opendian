@@ -1,5 +1,5 @@
 /**
- * Claudian - Sidebar chat view
+ * OpenCode - Sidebar chat view
  *
  * Thin shell that coordinates TabManager for multi-tab support.
  * All per-conversation state is managed by individual tabs.
@@ -8,15 +8,15 @@
 import type { EventRef, WorkspaceLeaf } from 'obsidian';
 import { ItemView, Notice, setIcon } from 'obsidian';
 
-import { VIEW_TYPE_CLAUDIAN } from '../../core/types';
-import type ClaudianPlugin from '../../main';
+import { VIEW_TYPE_OPENCODE } from '../../core/types';
+import type OpencodePlugin from '../../main';
 import { LOGO_SVG } from './constants';
 import { TabBar, TabManager } from './tabs';
 import type { TabData, TabId } from './tabs/types';
 
-/** Main sidebar chat view for interacting with Claude. */
-export class ClaudianView extends ItemView {
-  private plugin: ClaudianPlugin;
+/** Main sidebar chat view for interacting with OpenCode. */
+export class OpencodeView extends ItemView {
+  private plugin: OpencodePlugin;
 
   // Tab management
   private tabManager: TabManager | null = null;
@@ -40,21 +40,21 @@ export class ClaudianView extends ItemView {
   // Debouncing for tab state persistence
   private pendingPersist: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(leaf: WorkspaceLeaf, plugin: ClaudianPlugin) {
+  constructor(leaf: WorkspaceLeaf, plugin: OpencodePlugin) {
     super(leaf);
     this.plugin = plugin;
   }
 
   getViewType(): string {
-    return VIEW_TYPE_CLAUDIAN;
+    return VIEW_TYPE_OPENCODE;
   }
 
   getDisplayText(): string {
-    return 'Claudian';
+    return 'OpenCode';
   }
 
   getIcon(): string {
-    return 'bot';
+    return 'app';
   }
 
   /** Refreshes the model selector display (used after env var changes). */
@@ -67,17 +67,17 @@ export class ClaudianView extends ItemView {
   async onOpen() {
     this.viewContainerEl = this.containerEl.children[1] as HTMLElement;
     this.viewContainerEl.empty();
-    this.viewContainerEl.addClass('claudian-container');
+    this.viewContainerEl.addClass('opencode-container');
 
     // Build header (logo only, tab bar and actions moved to nav row)
-    const header = this.viewContainerEl.createDiv({ cls: 'claudian-header' });
+    const header = this.viewContainerEl.createDiv({ cls: 'opencode-header' });
     this.buildHeader(header);
 
     // Build nav row content (tab badges + header actions)
     this.navRowContent = this.buildNavRowContent();
 
     // Tab content container (TabManager will populate this)
-    this.tabContentEl = this.viewContainerEl.createDiv({ cls: 'claudian-tab-content-container' });
+    this.tabContentEl = this.viewContainerEl.createDiv({ cls: 'opencode-tab-content-container' });
 
     // Initialize TabManager
     this.tabManager = new TabManager(
@@ -153,8 +153,8 @@ export class ClaudianView extends ItemView {
   private buildHeader(header: HTMLElement) {
     // Header only contains logo and title now
     // Tab badges and header actions are in nav row (above input)
-    const titleContainer = header.createDiv({ cls: 'claudian-title' });
-    const logoEl = titleContainer.createSpan({ cls: 'claudian-logo' });
+    const titleContainer = header.createDiv({ cls: 'opencode-title' });
+    const logoEl = titleContainer.createSpan({ cls: 'opencode-logo' });
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', LOGO_SVG.viewBox);
     svg.setAttribute('width', LOGO_SVG.width);
@@ -165,7 +165,7 @@ export class ClaudianView extends ItemView {
     path.setAttribute('fill', LOGO_SVG.fill);
     svg.appendChild(path);
     logoEl.appendChild(svg);
-    titleContainer.createEl('h4', { text: 'Claudian' });
+    titleContainer.createEl('h4', { text: 'OpenCode' });
   }
 
   /**
@@ -178,7 +178,7 @@ export class ClaudianView extends ItemView {
 
     // Tab badges (left side)
     this.tabBarContainerEl = document.createElement('div');
-    this.tabBarContainerEl.className = 'claudian-tab-bar-container';
+    this.tabBarContainerEl.className = 'opencode-tab-bar-container';
     this.tabBar = new TabBar(this.tabBarContainerEl, {
       onTabClick: (tabId) => this.handleTabClick(tabId),
       onTabClose: (tabId) => this.handleTabClose(tabId),
@@ -188,10 +188,10 @@ export class ClaudianView extends ItemView {
 
     // Header actions (right side)
     const headerActions = document.createElement('div');
-    headerActions.className = 'claudian-header-actions';
+    headerActions.className = 'opencode-header-actions';
 
     // New tab button (plus icon)
-    const newTabBtn = headerActions.createDiv({ cls: 'claudian-header-btn claudian-new-tab-btn' });
+    const newTabBtn = headerActions.createDiv({ cls: 'opencode-header-btn opencode-new-tab-btn' });
     setIcon(newTabBtn, 'square-plus');
     newTabBtn.setAttribute('aria-label', 'New tab');
     newTabBtn.addEventListener('click', async () => {
@@ -199,7 +199,7 @@ export class ClaudianView extends ItemView {
     });
 
     // New conversation button (square-pen icon - new conversation in current tab)
-    const newBtn = headerActions.createDiv({ cls: 'claudian-header-btn' });
+    const newBtn = headerActions.createDiv({ cls: 'opencode-header-btn' });
     setIcon(newBtn, 'square-pen');
     newBtn.setAttribute('aria-label', 'New conversation');
     newBtn.addEventListener('click', async () => {
@@ -208,12 +208,12 @@ export class ClaudianView extends ItemView {
     });
 
     // History dropdown
-    const historyContainer = headerActions.createDiv({ cls: 'claudian-history-container' });
-    const historyBtn = historyContainer.createDiv({ cls: 'claudian-header-btn' });
+    const historyContainer = headerActions.createDiv({ cls: 'opencode-history-container' });
+    const historyBtn = historyContainer.createDiv({ cls: 'opencode-header-btn' });
     setIcon(historyBtn, 'history');
     historyBtn.setAttribute('aria-label', 'Chat history');
 
-    this.historyDropdown = historyContainer.createDiv({ cls: 'claudian-history-menu' });
+    this.historyDropdown = historyContainer.createDiv({ cls: 'opencode-history-menu' });
 
     historyBtn.addEventListener('click', (e) => {
       e.stopPropagation();

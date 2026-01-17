@@ -1,0 +1,117 @@
+/* Agent selector styles */
+.opencode-agent-selector {
+  position: relative;
+}
+
+.opencode-agent-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.opencode-agent-btn:hover {
+  background: var(--background-modifier-hover);
+}
+
+.opencode-agent-chevron {
+  display: flex;
+  align-items: center;
+}
+
+.opencode-agent-chevron svg {
+  width: 12px;
+  height: 12px;
+}
+
+.opencode-agent-dropdown {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  width: max-content;
+  padding: 4px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
+.opencode-agent-selector:hover .opencode-agent-dropdown {
+  opacity: 1;
+  visibility: visible;
+}
+
+.opencode-agent-option {
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-radius: 3px;
+  transition: background 0.1s ease, color 0.1s ease;
+  white-space: nowrap;
+}
+
+.opencode-agent-option:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.opencode-agent-option.selected {
+  background: rgba(230, 36, 37, 0.15);
+  color: #E62425;
+  font-weight: 500;
+}
+
+.opencode-agent-option-name {
+  font-weight: 500;
+  display: block;
+}
+
+/* Send button for OpenCode - primary variant with arrow-up icon */
+.opencode-send-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  /* OpenCode primary button colors */
+  background: var(--interactive-normal, #E62425);
+  color: white;
+  border: none;
+  transition: background 0.1s ease, transform 0.1s ease;
+}
+
+.opencode-send-btn:hover {
+  background: var(--interactive-hover, #C91E1F);
+}
+
+.opencode-send-btn:active {
+  transform: scale(0.95);
+}
+
+.opencode-send-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.opencode-send-icon svg {
+  width: 14px;
+  height: 14px;
+}
+

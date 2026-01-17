@@ -44,7 +44,7 @@ const TOOL_ICONS: Record<string, string> = {
   [TOOL_MCP]: 'wrench',
   [TOOL_WEB_SEARCH]: 'globe',
   [TOOL_WEB_FETCH]: 'download',
-  [TOOL_AGENT_OUTPUT]: 'bot',
+  [TOOL_AGENT_OUTPUT]: 'workflow',
   [TOOL_SKILL]: 'zap',
 };
 

@@ -62,17 +62,17 @@ export class TodoPanel {
 
     // Create panel element (no border/background - seamless)
     this.panelEl = document.createElement('div');
-    this.panelEl.className = 'claudian-todo-panel';
+    this.panelEl.className = 'opencode-todo-panel';
 
     // Todo container
     this.todoContainerEl = document.createElement('div');
-    this.todoContainerEl.className = 'claudian-todo-panel-todos';
+    this.todoContainerEl.className = 'opencode-todo-panel-todos';
     this.todoContainerEl.style.display = 'none';
     this.panelEl.appendChild(this.todoContainerEl);
 
     // Todo header (collapsed view)
     this.todoHeaderEl = document.createElement('div');
-    this.todoHeaderEl.className = 'claudian-todo-panel-header';
+    this.todoHeaderEl.className = 'opencode-todo-panel-header';
     this.todoHeaderEl.setAttribute('tabindex', '0');
     this.todoHeaderEl.setAttribute('role', 'button');
 
@@ -90,7 +90,7 @@ export class TodoPanel {
 
     // Todo content (expanded list)
     this.todoContentEl = document.createElement('div');
-    this.todoContentEl.className = 'claudian-todo-panel-content';
+    this.todoContentEl.className = 'opencode-todo-panel-content';
     this.todoContentEl.style.display = 'none';
     this.todoContainerEl.appendChild(this.todoContentEl);
 
@@ -147,20 +147,20 @@ export class TodoPanel {
 
     // List icon
     const icon = document.createElement('span');
-    icon.className = 'claudian-todo-panel-icon';
+    icon.className = 'opencode-todo-panel-icon';
     setIcon(icon, 'list-checks');
     this.todoHeaderEl.appendChild(icon);
 
     // Label
     const label = document.createElement('span');
-    label.className = 'claudian-todo-panel-label';
+    label.className = 'opencode-todo-panel-label';
     label.textContent = `Tasks (${completedCount}/${totalCount})`;
     this.todoHeaderEl.appendChild(label);
 
     // Current task (only when collapsed)
     if (!this.isExpanded && currentTask) {
       const current = document.createElement('span');
-      current.className = 'claudian-todo-panel-current';
+      current.className = 'opencode-todo-panel-current';
       current.textContent = currentTask.activeForm;
       this.todoHeaderEl.appendChild(current);
     }
@@ -176,10 +176,10 @@ export class TodoPanel {
 
     for (const todo of todos) {
       const itemEl = document.createElement('div');
-      itemEl.className = `claudian-todo-item claudian-todo-${todo.status}`;
+      itemEl.className = `opencode-todo-item opencode-todo-${todo.status}`;
 
       const statusIcon = document.createElement('div');
-      statusIcon.className = 'claudian-todo-status-icon';
+      statusIcon.className = 'opencode-todo-status-icon';
       statusIcon.setAttribute('aria-hidden', 'true');
       const iconName = this.getStatusIcon(todo.status);
       if (iconName) {
@@ -188,7 +188,7 @@ export class TodoPanel {
       itemEl.appendChild(statusIcon);
 
       const text = document.createElement('div');
-      text.className = 'claudian-todo-text';
+      text.className = 'opencode-todo-text';
       text.textContent = todo.status === 'in_progress' ? todo.activeForm : todo.content;
       itemEl.appendChild(text);
 

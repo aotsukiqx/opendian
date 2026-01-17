@@ -1,12 +1,12 @@
 /* MCP Server Selector */
-.claudian-mcp-selector {
+.opencode-mcp-selector {
   position: relative;
   display: flex;
   align-items: center;
   margin-left: 8px;
 }
 
-.claudian-mcp-selector-icon-wrapper {
+.opencode-mcp-selector-icon-wrapper {
   position: relative;
   display: flex;
   align-items: center;
@@ -14,7 +14,7 @@
   cursor: pointer;
 }
 
-.claudian-mcp-selector-icon {
+.opencode-mcp-selector-icon {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -26,23 +26,23 @@
   transition: all 0.2s ease;
 }
 
-.claudian-mcp-selector-icon-wrapper:hover .claudian-mcp-selector-icon {
+.opencode-mcp-selector-icon-wrapper:hover .opencode-mcp-selector-icon {
   background: var(--background-modifier-hover);
   opacity: 0.8;
 }
 
-.claudian-mcp-selector-icon.active {
+.opencode-mcp-selector-icon.active {
   color: #D97757;
   opacity: 1;
   animation: mcp-glow 2s ease-in-out infinite;
 }
 
-.claudian-mcp-selector-icon svg {
+.opencode-mcp-selector-icon svg {
   width: 16px;
   height: 16px;
 }
 
-.claudian-mcp-selector-badge {
+.opencode-mcp-selector-badge {
   position: absolute;
   top: 0;
   right: 0;
@@ -54,11 +54,11 @@
   pointer-events: none;
 }
 
-.claudian-mcp-selector-badge.visible {
+.opencode-mcp-selector-badge.visible {
   opacity: 1;
 }
 
-.claudian-mcp-selector-dropdown {
+.opencode-mcp-selector-dropdown {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -77,7 +77,7 @@
 }
 
 /* Bridge the gap between icon and dropdown to prevent hover breaks */
-.claudian-mcp-selector-dropdown::after {
+.opencode-mcp-selector-dropdown::after {
   content: '';
   position: absolute;
   left: 0;
@@ -86,13 +86,13 @@
   height: 8px;
 }
 
-.claudian-mcp-selector-dropdown.visible,
-.claudian-mcp-selector:hover .claudian-mcp-selector-dropdown {
+.opencode-mcp-selector-dropdown.visible,
+.opencode-mcp-selector:hover .opencode-mcp-selector-dropdown {
   opacity: 1;
   visibility: visible;
 }
 
-.claudian-mcp-selector-header {
+.opencode-mcp-selector-header {
   padding: 10px 12px;
   font-size: 12px;
   font-weight: 600;
@@ -100,12 +100,12 @@
   border-bottom: 1px solid var(--background-modifier-border);
 }
 
-.claudian-mcp-selector-list {
+.opencode-mcp-selector-list {
   max-height: 200px;
   overflow-y: auto;
 }
 
-.claudian-mcp-selector-empty {
+.opencode-mcp-selector-empty {
   padding: 16px 12px;
   text-align: center;
   color: var(--text-muted);
@@ -113,7 +113,7 @@
   font-style: italic;
 }
 
-.claudian-mcp-selector-item {
+.opencode-mcp-selector-item {
   display: flex;
   align-items: center;
   padding: 8px 12px;
@@ -122,15 +122,15 @@
   transition: background 0.15s ease;
 }
 
-.claudian-mcp-selector-item:hover {
+.opencode-mcp-selector-item:hover {
   background: var(--background-modifier-hover);
 }
 
-.claudian-mcp-selector-item.enabled {
+.opencode-mcp-selector-item.enabled {
   background: rgba(217, 119, 87, 0.1);
 }
 
-.claudian-mcp-selector-check {
+.opencode-mcp-selector-check {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -141,17 +141,17 @@
   color: #D97757;
 }
 
-.claudian-mcp-selector-item.enabled .claudian-mcp-selector-check {
+.opencode-mcp-selector-item.enabled .opencode-mcp-selector-check {
   background: rgba(217, 119, 87, 0.2);
   border-color: #D97757;
 }
 
-.claudian-mcp-selector-check svg {
+.opencode-mcp-selector-check svg {
   width: 12px;
   height: 12px;
 }
 
-.claudian-mcp-selector-item-info {
+.opencode-mcp-selector-item-info {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -160,7 +160,7 @@
   overflow: hidden;
 }
 
-.claudian-mcp-selector-item-name {
+.opencode-mcp-selector-item-name {
   font-size: 12px;
   color: var(--text-normal);
   overflow: hidden;
@@ -168,7 +168,7 @@
   white-space: nowrap;
 }
 
-.claudian-mcp-selector-cs-badge {
+.opencode-mcp-selector-cs-badge {
   font-size: 10px;
   font-weight: 600;
   padding: 1px 4px;

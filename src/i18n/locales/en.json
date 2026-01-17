@@ -20,10 +20,10 @@
     "platform": "Platform"
   },
   "settings": {
-    "title": "Claudian Settings",
+    "title": "OpenCode Settings",
     "customization": "Customization",
     "userName": {
-      "name": "What should Claudian call you?",
+      "name": "What should OpenCode call you?",
       "desc": "Your name for personalized greetings (leave empty for generic greetings)"
     },
     "excludedTags": {
@@ -32,7 +32,7 @@
     },
     "mediaFolder": {
       "name": "Media folder",
-      "desc": "Folder containing attachments/images. When notes use ![[image.jpg]], Claude will look here. Leave empty for vault root."
+      "desc": "Folder containing attachments/images. When notes use ![[image.jpg]], OpenCode will look here. Leave empty for vault root."
     },
     "systemPrompt": {
       "name": "Custom system prompt",
@@ -93,11 +93,11 @@
     },
     "mcpServers": {
       "name": "MCP Servers",
-      "desc": "Configure Model Context Protocol servers to extend Claude's capabilities with external tools and data sources. Servers with context-saving mode require @mention to activate."
+      "desc": "Configure Model Context Protocol servers to extend OpenCode's capabilities with external tools and data sources. Servers with context-saving mode require @mention to activate."
     },
     "plugins": {
-      "name": "Claude Code Plugins",
-      "desc": "Enable or disable Claude Code plugins discovered from ~/.claude/plugins. Enabled plugins are stored per vault."
+      "name": "OpenCode Plugins",
+      "desc": "Enable or disable plugins discovered from ~/.opencode/plugins. Enabled plugins are stored per vault."
     },
     "safety": "Safety",
     "loadUserSettings": {
@@ -143,21 +143,37 @@
       }
     },
     "advanced": "Advanced",
+    "agentBackend": {
+      "name": "Agent backend",
+      "desc": "Choose which agent backend to use. OpenCode is recommended for local development. Claude Code is available as an alternative."
+    },
+    "opencodeHostname": {
+      "name": "OpenCode hostname",
+      "desc": "Hostname where OpenCode server is running (default: 127.0.0.1)"
+    },
+    "opencodePort": {
+      "name": "OpenCode port",
+      "desc": "Port where OpenCode server is running (default: 4096)"
+    },
+    "opencodeTimeout": {
+      "name": "OpenCode timeout",
+      "desc": "Timeout in milliseconds for OpenCode API requests (default: 5000)"
+    },
     "show1MModel": {
-      "name": "Enable Sonnet with 1M context window",
-      "desc": "Replace standard Sonnet with Sonnet (1M) in the model selector. Same pricing under 200k tokens. Requires Max subscription."
+      "name": "Enable extended context model",
+      "desc": "Enable models with extended context windows in the model selector."
     },
     "maxTabs": {
       "name": "Maximum chat tabs",
-      "desc": "Maximum number of concurrent chat tabs (3-10). Each tab uses a separate Claude session.",
+      "desc": "Maximum number of concurrent chat tabs (3-10). Each tab uses a separate session.",
       "warning": "More than 5 tabs may impact performance and memory usage.",
       "range": "{min} - {max}"
     },
     "cliPath": {
-      "name": "Claude CLI path",
-      "desc": "Custom path to Claude Code CLI. Leave empty for auto-detection.",
-      "descWindows": "For the native installer, use claude.exe. For npm/pnpm/yarn or other package manager installs, use the cli.js path (not claude.cmd).",
-      "descUnix": "Paste the output of \"which claude\" — works for both native and npm/pnpm/yarn installs.",
+      "name": "CLI path",
+      "desc": "Custom path to CLI. Leave empty for auto-detection.",
+      "descWindows": "For the native installer, use the executable. For npm/pnpm/yarn installs, use the cli.js path.",
+      "descUnix": "Paste the output of \"which <cli>\" — works for both native and npm/pnpm/yarn installs.",
       "validation": {
         "notExist": "Path does not exist",
         "isDirectory": "Path is a directory, not a file"

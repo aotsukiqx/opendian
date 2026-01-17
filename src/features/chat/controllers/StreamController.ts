@@ -5,6 +5,7 @@
  * state tracking, and thinking indicator display.
  */
 
+import type { IAgentService } from '../../../core/agent/IAgentService';
 import type { ClaudianService } from '../../../core/agent';
 import { getDiffData } from '../../../core/hooks';
 import { parseTodoInput } from '../../../core/tools';
@@ -49,7 +50,7 @@ export interface StreamControllerDeps {
   getFileContextManager: () => FileContextManager | null;
   updateQueueIndicator: () => void;
   /** Get the agent service from the tab. */
-  getAgentService?: () => ClaudianService | null;
+  getAgentService?: () => IAgentService | null;
 }
 
 /**
@@ -198,8 +199,8 @@ export class StreamController {
           const toolEl = state.toolCallElements.get(chunk.id);
           if (toolEl) {
             // Try regular tool label first, then Write/Edit label
-            const labelEl = toolEl.querySelector('.claudian-tool-label') as HTMLElement | null
-              ?? toolEl.querySelector('.claudian-write-edit-label') as HTMLElement | null;
+            const labelEl = toolEl.querySelector('.opencode-tool-label') as HTMLElement | null
+              ?? toolEl.querySelector('.opencode-write-edit-label') as HTMLElement | null;
             if (labelEl) {
               labelEl.setText(getToolLabel(existingToolCall.name, existingToolCall.input));
             }
@@ -332,7 +333,7 @@ export class StreamController {
     this.hideThinkingIndicator();
 
     if (!state.currentTextEl) {
-      state.currentTextEl = state.currentContentEl.createDiv({ cls: 'claudian-text-block' });
+      state.currentTextEl = state.currentContentEl.createDiv({ cls: 'opencode-text-block' });
       state.currentTextContent = '';
     }
 
@@ -411,7 +412,7 @@ export class StreamController {
         const description = (newInput.description as string) || '';
         if (description) {
           existingState.info.description = description;
-          const labelEl = existingState.wrapperEl.querySelector('.claudian-subagent-label') as HTMLElement | null;
+          const labelEl = existingState.wrapperEl.querySelector('.opencode-subagent-label') as HTMLElement | null;
           if (labelEl) {
             const truncated = description.length > 40 ? description.substring(0, 40) + '...' : description;
             labelEl.setText(truncated);
@@ -529,7 +530,7 @@ export class StreamController {
           if (existingInfo) {
             existingInfo.description = description;
           }
-          const labelEl = existingState.wrapperEl.querySelector('.claudian-subagent-label') as HTMLElement | null;
+          const labelEl = existingState.wrapperEl.querySelector('.opencode-subagent-label') as HTMLElement | null;
           if (labelEl) {
             const truncated = description.length > 40 ? description.substring(0, 40) + '...' : description;
             labelEl.setText(truncated);
@@ -701,13 +702,13 @@ export class StreamController {
       // Double-check we still have a content element, no indicator exists, and no thinking block
       if (!state.currentContentEl || state.thinkingEl || state.currentThinkingState) return;
 
-      state.thinkingEl = state.currentContentEl.createDiv({ cls: 'claudian-thinking' });
+      state.thinkingEl = state.currentContentEl.createDiv({ cls: 'opencode-thinking' });
       const randomText = FLAVOR_TEXTS[Math.floor(Math.random() * FLAVOR_TEXTS.length)];
       state.thinkingEl.createSpan({ text: randomText });
-      state.thinkingEl.createSpan({ text: ' (esc to interrupt)', cls: 'claudian-thinking-hint' });
+      state.thinkingEl.createSpan({ text: ' (esc to interrupt)', cls: 'opencode-thinking-hint' });
 
       // Queue indicator line (initially hidden)
-      state.queueIndicatorEl = state.thinkingEl.createDiv({ cls: 'claudian-queue-indicator' });
+      state.queueIndicatorEl = state.thinkingEl.createDiv({ cls: 'opencode-queue-indicator' });
       this.deps.updateQueueIndicator();
     }, StreamController.THINKING_INDICATOR_DELAY);
   }

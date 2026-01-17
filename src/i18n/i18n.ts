@@ -19,17 +19,18 @@ import * as zhTW from './locales/zh-TW.json';
 import type { Locale, TranslationKey } from './types';
 
 // Type-safe translation mapping
+// Using type assertion to allow for incremental translation updates
 const translations: Record<Locale, typeof en> = {
   en,
-  'zh-CN': zhCN,
-  'zh-TW': zhTW,
-  ja,
-  ko,
-  de,
-  fr,
-  es,
-  ru,
-  pt,
+  'zh-CN': zhCN as typeof en,
+  'zh-TW': zhTW as typeof en,
+  ja: ja as typeof en,
+  ko: ko as typeof en,
+  de: de as typeof en,
+  fr: fr as typeof en,
+  es: es as typeof en,
+  ru: ru as typeof en,
+  pt: pt as typeof en,
 };
 
 // Default locale

@@ -76,15 +76,15 @@ export class MessageRenderer {
     }
 
     const msgEl = this.messagesEl.createDiv({
-      cls: `claudian-message claudian-message-${msg.role}`,
+      cls: `opencode-message opencode-message-${msg.role}`,
     });
 
-    const contentEl = msgEl.createDiv({ cls: 'claudian-message-content' });
+    const contentEl = msgEl.createDiv({ cls: 'opencode-message-content' });
 
     if (msg.role === 'user') {
       const textToShow = msg.displayContent ?? msg.content;
       if (textToShow) {
-        const textEl = contentEl.createDiv({ cls: 'claudian-text-block' });
+        const textEl = contentEl.createDiv({ cls: 'opencode-text-block' });
         void this.renderContent(textEl, textToShow);
       }
     }
@@ -110,8 +110,8 @@ export class MessageRenderer {
     this.messagesEl.empty();
 
     // Recreate welcome element after clearing
-    const newWelcomeEl = this.messagesEl.createDiv({ cls: 'claudian-welcome' });
-    newWelcomeEl.createDiv({ cls: 'claudian-welcome-greeting', text: getGreeting() });
+    const newWelcomeEl = this.messagesEl.createDiv({ cls: 'opencode-welcome' });
+    newWelcomeEl.createDiv({ cls: 'opencode-welcome-greeting', text: getGreeting() });
 
     for (const msg of messages) {
       this.renderStoredMessage(msg);
@@ -151,15 +151,15 @@ export class MessageRenderer {
     }
 
     const msgEl = this.messagesEl.createDiv({
-      cls: `claudian-message claudian-message-${msg.role}`,
+      cls: `opencode-message opencode-message-${msg.role}`,
     });
 
-    const contentEl = msgEl.createDiv({ cls: 'claudian-message-content' });
+    const contentEl = msgEl.createDiv({ cls: 'opencode-message-content' });
 
     if (msg.role === 'user') {
       const textToShow = msg.displayContent ?? msg.content;
       if (textToShow) {
-        const textEl = contentEl.createDiv({ cls: 'claudian-text-block' });
+        const textEl = contentEl.createDiv({ cls: 'opencode-text-block' });
         void this.renderContent(textEl, textToShow);
       }
     } else if (msg.role === 'assistant') {
@@ -172,10 +172,10 @@ export class MessageRenderer {
    * Uses the same styling as streaming interrupts.
    */
   private renderInterruptMessage(): void {
-    const msgEl = this.messagesEl.createDiv({ cls: 'claudian-message claudian-message-assistant' });
-    const contentEl = msgEl.createDiv({ cls: 'claudian-message-content' });
-    const textEl = contentEl.createDiv({ cls: 'claudian-text-block' });
-    textEl.innerHTML = '<span class="claudian-interrupted">Interrupted</span> <span class="claudian-interrupted-hint">· What should Claudian do instead?</span>';
+    const msgEl = this.messagesEl.createDiv({ cls: 'opencode-message opencode-message-assistant' });
+    const contentEl = msgEl.createDiv({ cls: 'opencode-message-content' });
+    const textEl = contentEl.createDiv({ cls: 'opencode-text-block' });
+    textEl.innerHTML = '<span class="opencode-interrupted">Interrupted</span> <span class="opencode-interrupted-hint">· What should OpenCode do instead?</span>';
   }
 
   /**
@@ -196,7 +196,7 @@ export class MessageRenderer {
           if (!block.content || !block.content.trim()) {
             continue;
           }
-          const textEl = contentEl.createDiv({ cls: 'claudian-text-block' });
+          const textEl = contentEl.createDiv({ cls: 'opencode-text-block' });
           void this.renderContent(textEl, block.content);
           this.addTextCopyButton(textEl, block.content);
         } else if (block.type === 'tool_use') {
@@ -219,7 +219,7 @@ export class MessageRenderer {
     } else {
       // Fallback for old conversations without contentBlocks
       if (msg.content) {
-        const textEl = contentEl.createDiv({ cls: 'claudian-text-block' });
+        const textEl = contentEl.createDiv({ cls: 'opencode-text-block' });
         void this.renderContent(textEl, msg.content);
         this.addTextCopyButton(textEl, msg.content);
       }
@@ -250,10 +250,10 @@ export class MessageRenderer {
    * Renders image attachments above a message.
    */
   renderMessageImages(containerEl: HTMLElement, images: ImageAttachment[]): void {
-    const imagesEl = containerEl.createDiv({ cls: 'claudian-message-images' });
+    const imagesEl = containerEl.createDiv({ cls: 'opencode-message-images' });
 
     for (const image of images) {
-      const imageWrapper = imagesEl.createDiv({ cls: 'claudian-message-image' });
+      const imageWrapper = imagesEl.createDiv({ cls: 'opencode-message-image' });
       const imgEl = imageWrapper.createEl('img', {
         attr: {
           alt: image.name,
@@ -275,8 +275,8 @@ export class MessageRenderer {
   showFullImage(image: ImageAttachment): void {
     const dataUri = `data:${image.mediaType};base64,${image.data}`;
 
-    const overlay = document.body.createDiv({ cls: 'claudian-image-modal-overlay' });
-    const modal = overlay.createDiv({ cls: 'claudian-image-modal' });
+    const overlay = document.body.createDiv({ cls: 'opencode-image-modal-overlay' });
+    const modal = overlay.createDiv({ cls: 'opencode-image-modal' });
 
     modal.createEl('img', {
       attr: {
@@ -285,7 +285,7 @@ export class MessageRenderer {
       },
     });
 
-    const closeBtn = modal.createDiv({ cls: 'claudian-image-modal-close' });
+    const closeBtn = modal.createDiv({ cls: 'opencode-image-modal-close' });
     closeBtn.setText('\u00D7');
 
     const handleEsc = (e: KeyboardEvent) => {
@@ -336,10 +336,10 @@ export class MessageRenderer {
       // Wrap pre elements and move buttons outside scroll area
       el.querySelectorAll('pre').forEach((pre) => {
         // Skip if already wrapped
-        if (pre.parentElement?.classList.contains('claudian-code-wrapper')) return;
+        if (pre.parentElement?.classList.contains('opencode-code-wrapper')) return;
 
         // Create wrapper
-        const wrapper = createEl('div', { cls: 'claudian-code-wrapper' });
+        const wrapper = createEl('div', { cls: 'opencode-code-wrapper' });
         pre.parentElement?.insertBefore(wrapper, pre);
         wrapper.appendChild(pre);
 
@@ -350,7 +350,7 @@ export class MessageRenderer {
           if (match) {
             wrapper.classList.add('has-language');
             const label = createEl('span', {
-              cls: 'claudian-code-lang-label',
+              cls: 'opencode-code-lang-label',
               text: match[1],
             });
             wrapper.appendChild(label);
@@ -377,7 +377,7 @@ export class MessageRenderer {
       processFileLinks(this.app, el);
     } catch {
       el.createDiv({
-        cls: 'claudian-render-error',
+        cls: 'opencode-render-error',
         text: 'Failed to render message content.',
       });
     }
@@ -397,7 +397,7 @@ export class MessageRenderer {
    * @param markdown The original markdown content to copy
    */
   private addTextCopyButton(textEl: HTMLElement, markdown: string): void {
-    const copyBtn = textEl.createSpan({ cls: 'claudian-text-copy-btn' });
+    const copyBtn = textEl.createSpan({ cls: 'opencode-text-copy-btn' });
     copyBtn.innerHTML = MessageRenderer.COPY_ICON;
 
     let feedbackTimeout: ReturnType<typeof setTimeout> | null = null;

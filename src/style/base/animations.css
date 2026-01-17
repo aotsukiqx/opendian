@@ -42,7 +42,7 @@
 }
 
 /* Inline edit spinner */
-@keyframes claudian-inline-spin {
+@keyframes opencode-inline-spin {
   0% {
     transform: rotate(0deg);
   }
@@ -53,14 +53,14 @@
 }
 
 /* Instruction modal spinner */
-@keyframes claudian-instruction-spin {
+@keyframes opencode-instruction-spin {
   to {
     transform: rotate(360deg);
   }
 }
 
 /* MCP test spinner */
-@keyframes claudian-mcp-spin {
+@keyframes opencode-mcp-spin {
   to {
     transform: rotate(360deg);
   }

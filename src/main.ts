@@ -12,10 +12,11 @@ import { clearDiffState } from './core/hooks';
 import { McpServerManager } from './core/mcp';
 import { McpService } from './core/mcp/McpService';
 import { loadPluginCommands, PluginManager, PluginStorage } from './core/plugins';
+import { OpencodeServerManager } from './core/opencode/OpencodeServerManager';
 import { StorageService } from './core/storage';
 import type {
   ChatMessage,
-  ClaudianSettings,
+  OpencodeSettings,
   Conversation,
   ConversationMeta,
   ToolDiffData,
@@ -25,11 +26,11 @@ import {
   DEFAULT_SETTINGS,
   getCliPlatformKey,
   getHostnameKey,
-  VIEW_TYPE_CLAUDIAN,
+  VIEW_TYPE_OPENCODE,
 } from './core/types';
-import { ClaudianView } from './features/chat/ClaudianView';
+import { OpencodeView } from './features/chat/OpencodeView';
 import { type InlineEditContext, InlineEditModal } from './features/inline-edit/ui/InlineEditModal';
-import { ClaudianSettingTab } from './features/settings/ClaudianSettings';
+import { OpencodeSettingTab } from './features/settings/OpencodeSettings';
 import { setLocale } from './i18n';
 import { ClaudeCliResolver } from './utils/claudeCli';
 import { buildCursorContext } from './utils/editor';
@@ -42,7 +43,7 @@ import { deleteSDKSession, loadSDKSessionMessages, sdkSessionExists, type SDKSes
  * Handles plugin lifecycle, settings persistence, and conversation management.
  */
 export default class ClaudianPlugin extends Plugin {
-  settings: ClaudianSettings;
+  settings: OpencodeSettings;
   mcpService: McpService;
   pluginManager: PluginManager;
   storage: StorageService;
@@ -50,9 +51,23 @@ export default class ClaudianPlugin extends Plugin {
   private conversations: Conversation[] = [];
   private runtimeEnvironmentVariables = '';
   private hasNotifiedEnvChange = false;
+  private opencodeServerManager: OpencodeServerManager | null = null;
 
   async onload() {
     await this.loadSettings();
+
+    // Initialize OpenCode server if backend is selected and autoStart is enabled
+    if (this.settings.agentBackend === 'opencode' && this.settings.opencodeConfig.autoStart) {
+      const vaultPath = (this.app.vault.adapter as any).basePath;
+      if (vaultPath) {
+        this.opencodeServerManager = new OpencodeServerManager(
+          vaultPath,
+          this.settings.opencodeConfig,
+          this.settings.opencodePassword
+        );
+        await this.opencodeServerManager.start();
+      }
+    }
 
     this.cliResolver = new ClaudeCliResolver();
 
@@ -83,13 +98,25 @@ export default class ClaudianPlugin extends Plugin {
     this.loadPluginSlashCommands();
 
     this.registerView(
-      VIEW_TYPE_CLAUDIAN,
-      (leaf) => new ClaudianView(leaf, this)
-    );
+       VIEW_TYPE_OPENCODE,
+       (leaf) => new OpencodeView(leaf, this)
+     );
 
-    this.addRibbonIcon('bot', 'Open Claudian', () => {
-      this.activateView();
-    });
+     const ribbonIcon = this.addRibbonIcon('sparkle', 'Open OpenCode', () => {
+       this.activateView();
+     });
+
+     // Replace default sparkle SVG with OpenCode official favicon
+     const existingSvg = ribbonIcon.querySelector('svg');
+     if (existingSvg) {
+       existingSvg.outerHTML = `
+         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+           <rect width="24" height="24" rx="4" fill="#131010"/>
+           <path d="M15 10V17H9V10H15Z" fill="#5A5858"/>
+           <path fill-rule="evenodd" clip-rule="evenodd" d="M18 19H6V5H18V19ZM15 8H9V17H15V8Z" fill="white"/>
+         </svg>
+       `;
+     }
 
     this.addCommand({
       id: 'open-view',
@@ -135,10 +162,10 @@ export default class ClaudianPlugin extends Plugin {
       id: 'new-tab',
       name: 'New tab',
       checkCallback: (checking: boolean) => {
-        const leaf = this.app.workspace.getLeavesOfType(VIEW_TYPE_CLAUDIAN)[0];
+        const leaf = this.app.workspace.getLeavesOfType(VIEW_TYPE_OPENCODE)[0];
         if (!leaf) return false;
 
-        const view = leaf.view as ClaudianView;
+        const view = leaf.view as OpencodeView;
         const tabManager = view.getTabManager();
         if (!tabManager) return false;
 
@@ -156,10 +183,10 @@ export default class ClaudianPlugin extends Plugin {
       id: 'new-session',
       name: 'New session (in current tab)',
       checkCallback: (checking: boolean) => {
-        const leaf = this.app.workspace.getLeavesOfType(VIEW_TYPE_CLAUDIAN)[0];
+        const leaf = this.app.workspace.getLeavesOfType(VIEW_TYPE_OPENCODE)[0];
         if (!leaf) return false;
 
-        const view = leaf.view as ClaudianView;
+        const view = leaf.view as OpencodeView;
         const tabManager = view.getTabManager();
         if (!tabManager) return false;
 
@@ -180,10 +207,10 @@ export default class ClaudianPlugin extends Plugin {
       id: 'close-current-tab',
       name: 'Close current tab',
       checkCallback: (checking: boolean) => {
-        const leaf = this.app.workspace.getLeavesOfType(VIEW_TYPE_CLAUDIAN)[0];
+        const leaf = this.app.workspace.getLeavesOfType(VIEW_TYPE_OPENCODE)[0];
         if (!leaf) return false;
 
-        const view = leaf.view as ClaudianView;
+        const view = leaf.view as OpencodeView;
         const tabManager = view.getTabManager();
         if (!tabManager) return false;
 
@@ -198,10 +225,17 @@ export default class ClaudianPlugin extends Plugin {
       },
     });
 
-    this.addSettingTab(new ClaudianSettingTab(this.app, this));
+    this.addSettingTab(new OpencodeSettingTab(this.app, this));
   }
 
   async onunload() {
+    // Stop OpenCode server if running
+    if (this.opencodeServerManager) {
+      await this.opencodeServerManager.stop();
+      this.opencodeServerManager.cleanup();
+      this.opencodeServerManager = null;
+    }
+
     // Persist tab state for all views before unloading
     // This ensures state is saved even if Obsidian quits without calling onClose()
     for (const view of this.getAllViews()) {
@@ -216,13 +250,13 @@ export default class ClaudianPlugin extends Plugin {
   /** Opens the Claudian sidebar view, creating it if necessary. */
   async activateView() {
     const { workspace } = this.app;
-    let leaf = workspace.getLeavesOfType(VIEW_TYPE_CLAUDIAN)[0];
+    let leaf = workspace.getLeavesOfType(VIEW_TYPE_OPENCODE)[0];
 
     if (!leaf) {
       const rightLeaf = workspace.getRightLeaf(false);
       if (rightLeaf) {
         await rightLeaf.setViewState({
-          type: VIEW_TYPE_CLAUDIAN,
+          type: VIEW_TYPE_OPENCODE,
           active: true,
         });
         leaf = rightLeaf;
@@ -391,7 +425,7 @@ export default class ClaudianPlugin extends Plugin {
       ...settingsToSave
     } = this.settings;
 
-    await this.storage.saveClaudianSettings(settingsToSave);
+    await this.storage.saveOpencodeSettings(settingsToSave);
   }
 
   /**
@@ -803,25 +837,25 @@ export default class ClaudianPlugin extends Plugin {
   }
 
   /** Returns the active Claudian view from workspace, if open. */
-  getView(): ClaudianView | null {
-    const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_CLAUDIAN);
+  getView(): OpencodeView | null {
+    const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_OPENCODE);
     if (leaves.length > 0) {
-      return leaves[0].view as ClaudianView;
+      return leaves[0].view as OpencodeView;
     }
     return null;
   }
 
   /** Returns all open Claudian views in the workspace. */
-  getAllViews(): ClaudianView[] {
-    const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_CLAUDIAN);
-    return leaves.map(leaf => leaf.view as ClaudianView);
+  getAllViews(): OpencodeView[] {
+    const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_OPENCODE);
+    return leaves.map(leaf => leaf.view as OpencodeView);
   }
 
   /**
    * Checks if a conversation is open in any Claudian view.
    * Returns the view and tab if found, null otherwise.
    */
-  findConversationAcrossViews(conversationId: string): { view: ClaudianView; tabId: string } | null {
+  findConversationAcrossViews(conversationId: string): { view: OpencodeView; tabId: string } | null {
     for (const view of this.getAllViews()) {
       const tabManager = view.getTabManager();
       if (!tabManager) continue;

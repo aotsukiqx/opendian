@@ -1,7 +1,7 @@
 import type { QueryOptionsContext } from '@/core/agent/QueryOptionsBuilder';
 import { QueryOptionsBuilder } from '@/core/agent/QueryOptionsBuilder';
 import type { PersistentQueryConfig } from '@/core/agent/types';
-import type { ClaudianSettings } from '@/core/types';
+import type { OpencodeSettings } from '@/core/types';
 
 // Create a mock MCP server manager
 function createMockMcpManager() {
@@ -35,7 +35,7 @@ function createMockPluginManager() {
 }
 
 // Create a mock settings object
-function createMockSettings(overrides: Partial<ClaudianSettings> = {}): ClaudianSettings {
+function createMockSettings(overrides: Partial<OpencodeSettings> = {}): OpencodeSettings {
   return {
     enableBlocklist: true,
     blockedCommands: {
@@ -63,7 +63,7 @@ function createMockSettings(overrides: Partial<ClaudianSettings> = {}): Claudian
     claudeCliPath: '',
     show1MModel: false,
     ...overrides,
-  } as ClaudianSettings;
+  } as OpencodeSettings;
 }
 
 // Create a base context for tests

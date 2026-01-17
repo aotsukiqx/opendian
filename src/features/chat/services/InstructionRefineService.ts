@@ -68,6 +68,11 @@ export class InstructionRefineService {
     prompt: string,
     onProgress?: RefineProgressCallback
   ): Promise<InstructionRefineResult> {
+    // Skip when using OpenCode backend (requires Claude CLI)
+    if (this.plugin.settings.agentBackend === 'opencode') {
+      return { success: false, error: 'Instruction refinement requires Claude Code backend' };
+    }
+
     const vaultPath = getVaultPath(this.plugin.app);
     if (!vaultPath) {
       return { success: false, error: 'Could not determine vault path' };

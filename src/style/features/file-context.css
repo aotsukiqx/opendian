@@ -1,5 +1,5 @@
 /* @ Mention dropdown */
-.claudian-mention-dropdown {
+.opencode-mention-dropdown {
   display: none;
   position: absolute;
   bottom: 100%;
@@ -17,17 +17,17 @@
   overflow-y: auto;
 }
 
-.claudian-mention-dropdown.visible {
+.opencode-mention-dropdown.visible {
   display: block;
 }
 
 /* Fixed positioning for inline editor */
-.claudian-mention-dropdown-fixed {
+.opencode-mention-dropdown-fixed {
   position: fixed;
   z-index: 10001;
 }
 
-.claudian-mention-item {
+.opencode-mention-item {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -36,24 +36,24 @@
   transition: background 0.1s ease;
 }
 
-.claudian-mention-item:hover,
-.claudian-mention-item.selected {
+.opencode-mention-item:hover,
+.opencode-mention-item.selected {
   background: var(--background-modifier-hover);
 }
 
-.claudian-mention-icon {
+.opencode-mention-icon {
   display: flex;
   align-items: center;
   color: var(--text-muted);
   flex-shrink: 0;
 }
 
-.claudian-mention-icon svg {
+.opencode-mention-icon svg {
   width: 14px;
   height: 14px;
 }
 
-.claudian-mention-path {
+.opencode-mention-path {
   font-size: 13px;
   color: var(--text-normal);
   overflow: hidden;
@@ -61,7 +61,7 @@
   white-space: nowrap;
 }
 
-.claudian-mention-empty {
+.opencode-mention-empty {
   padding: 12px;
   text-align: center;
   color: var(--text-muted);
@@ -69,25 +69,25 @@
 }
 
 /* Scrollbar for mention dropdown */
-.claudian-mention-dropdown::-webkit-scrollbar {
+.opencode-mention-dropdown::-webkit-scrollbar {
   width: 6px;
 }
 
-.claudian-mention-dropdown::-webkit-scrollbar-track {
+.opencode-mention-dropdown::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.claudian-mention-dropdown::-webkit-scrollbar-thumb {
+.opencode-mention-dropdown::-webkit-scrollbar-thumb {
   background: var(--background-modifier-border);
   border-radius: 3px;
 }
 
 /* MCP items in @-mention dropdown */
-.claudian-mention-item.mcp-server .claudian-mention-icon {
+.opencode-mention-item.mcp-server .opencode-mention-icon {
   color: var(--interactive-accent);
 }
 
-.claudian-mention-text {
+.opencode-mention-text {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -95,13 +95,13 @@
   flex: 1;
 }
 
-.claudian-mention-name {
+.opencode-mention-name {
   font-size: 13px;
   font-weight: 500;
   color: var(--interactive-accent);
 }
 
-.claudian-mention-desc {
+.opencode-mention-desc {
   font-size: 11px;
   color: var(--text-muted);
   overflow: hidden;
@@ -110,21 +110,21 @@
 }
 
 /* Context file items in @-mention dropdown */
-.claudian-mention-item.context-file .claudian-mention-icon {
+.opencode-mention-item.context-file .opencode-mention-icon {
   color: #D97757;
 }
 
 /* Context folder filter items in @-mention dropdown */
-.claudian-mention-item.context-folder .claudian-mention-icon {
+.opencode-mention-item.context-folder .opencode-mention-icon {
   color: #D97757;
 }
 
-.claudian-mention-name-folder {
+.opencode-mention-name-folder {
   color: #D97757;
   font-weight: 600;
 }
 
-.claudian-mention-name-context {
+.opencode-mention-name-context {
   color: var(--text-normal);
 }
 

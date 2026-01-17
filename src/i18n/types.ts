@@ -124,6 +124,14 @@ export type TranslationKey =
 
   // Settings - Advanced
   | 'settings.advanced'
+  | 'settings.agentBackend.name'
+  | 'settings.agentBackend.desc'
+  | 'settings.opencodeHostname.name'
+  | 'settings.opencodeHostname.desc'
+  | 'settings.opencodePort.name'
+  | 'settings.opencodePort.desc'
+  | 'settings.opencodeTimeout.name'
+  | 'settings.opencodeTimeout.desc'
   | 'settings.show1MModel.name'
   | 'settings.show1MModel.desc'
   | 'settings.maxTabs.name'

@@ -1,5 +1,5 @@
 /**
- * Claudian - Input toolbar components (model selector, thinking budget, permission toggle).
+ * OpenCode - Input toolbar components (model selector, variant selector, permission toggle).
  */
 
 import { Notice, setIcon } from 'obsidian';
@@ -26,6 +26,22 @@ export interface ToolbarSettings {
   thinkingBudget: ThinkingBudget;
   permissionMode: PermissionMode;
   show1MModel?: boolean;
+  agentBackend?: 'claude-code' | 'opencode';
+  opencodeModels?: Array<{
+    value: string;
+    label: string;
+    description: string;
+    provider: string;
+    modelId: string;
+    reasoning: boolean;
+    temperature: boolean;
+  }>;
+  opencodeAgents?: Array<{
+    value: string;
+    name: string;
+    description: string;
+  }>;
+  currentAgent?: string;
 }
 
 /** Callback interface for toolbar changes. */
@@ -33,6 +49,9 @@ export interface ToolbarCallbacks {
   onModelChange: (model: ClaudeModel) => Promise<void>;
   onThinkingBudgetChange: (budget: ThinkingBudget) => Promise<void>;
   onPermissionModeChange: (mode: PermissionMode) => Promise<void>;
+  onAgentChange?: (agent: string) => Promise<void>;
+  onImageUploadClick?: () => void;
+  onSendClick?: () => void;
   getSettings: () => ToolbarSettings;
   getEnvironmentVariables?: () => string;
 }
@@ -46,12 +65,20 @@ export class ModelSelector {
 
   constructor(parentEl: HTMLElement, callbacks: ToolbarCallbacks) {
     this.callbacks = callbacks;
-    this.container = parentEl.createDiv({ cls: 'claudian-model-selector' });
+    this.container = parentEl.createDiv({ cls: 'opencode-model-selector' });
     this.render();
   }
 
-  /** Returns available models (custom from env vars, or defaults). */
+  /** Returns available models (custom from env vars, OpenCode, or defaults). */
   private getAvailableModels() {
+    const settings = this.callbacks.getSettings();
+
+    // Use OpenCode models if backend is OpenCode and models are cached
+    if (settings.agentBackend === 'opencode' && settings.opencodeModels && settings.opencodeModels.length > 0) {
+      return settings.opencodeModels;
+    }
+
+    // Fall back to environment or default models
     let models: { value: string; label: string; description: string }[] = [];
 
     if (this.callbacks.getEnvironmentVariables) {
@@ -69,7 +96,6 @@ export class ModelSelector {
     }
 
     // When 1M context is enabled, update sonnet label to show "(1M)"
-    const settings = this.callbacks.getSettings();
     if (settings.show1MModel) {
       models = models.map(m =>
         m.value === 'sonnet' ? { ...m, label: 'Sonnet (1M)' } : m
@@ -82,10 +108,10 @@ export class ModelSelector {
   private render() {
     this.container.empty();
 
-    this.buttonEl = this.container.createDiv({ cls: 'claudian-model-btn' });
+    this.buttonEl = this.container.createDiv({ cls: 'opencode-model-btn' });
     this.updateDisplay();
 
-    this.dropdownEl = this.container.createDiv({ cls: 'claudian-model-dropdown' });
+    this.dropdownEl = this.container.createDiv({ cls: 'opencode-model-dropdown' });
     this.renderOptions();
   }
 
@@ -99,7 +125,7 @@ export class ModelSelector {
 
     this.buttonEl.empty();
 
-    const labelEl = this.buttonEl.createSpan({ cls: 'claudian-model-label' });
+    const labelEl = this.buttonEl.createSpan({ cls: 'opencode-model-label' });
     labelEl.setText(displayModel?.label || 'Unknown');
   }
 
@@ -111,7 +137,7 @@ export class ModelSelector {
     const models = this.getAvailableModels();
 
     for (const model of [...models].reverse()) {
-      const option = this.dropdownEl.createDiv({ cls: 'claudian-model-option' });
+      const option = this.dropdownEl.createDiv({ cls: 'opencode-model-option' });
       if (model.value === currentModel) {
         option.addClass('selected');
       }
@@ -131,6 +157,127 @@ export class ModelSelector {
   }
 }
 
+/** OpenCode provider/model selector component (replaces ModelSelector for OpenCode). */
+export class ProviderModelSelector {
+  private container: HTMLElement;
+  private buttonEl: HTMLElement | null = null;
+  private dropdownEl: HTMLElement | null = null;
+  private callbacks: ToolbarCallbacks;
+
+  constructor(parentEl: HTMLElement, callbacks: ToolbarCallbacks) {
+    this.callbacks = callbacks;
+    this.container = parentEl.createDiv({ cls: 'opencode-provider-model-selector' });
+    this.render();
+  }
+
+  private render() {
+    this.container.empty();
+
+    this.buttonEl = this.container.createDiv({ cls: 'opencode-provider-model-btn' });
+    this.updateDisplay();
+
+    this.dropdownEl = this.container.createDiv({ cls: 'opencode-provider-model-dropdown' });
+    this.renderOptions();
+  }
+
+  private getProviderModels(): Array<{
+    value: string;
+    label: string;
+    provider: string;
+    providerLabel: string;
+    description: string;
+  }> {
+    const settings = this.callbacks.getSettings();
+
+    if (settings.agentBackend === 'opencode' && settings.opencodeModels && settings.opencodeModels.length > 0) {
+      return settings.opencodeModels.map(m => ({
+        value: m.value,
+        label: m.label,
+        provider: m.provider,
+        providerLabel: m.provider.charAt(0).toUpperCase() + m.provider.slice(1),
+        description: m.description,
+      }));
+    }
+
+    return [];
+  }
+
+  updateDisplay() {
+    if (!this.buttonEl) return;
+    const settings = this.callbacks.getSettings();
+    const models = this.getProviderModels();
+    const currentModel = models.find(m => m.value === settings.model);
+    const displayModel = currentModel || models[0];
+
+    this.buttonEl.empty();
+
+    // Provider label (left side)
+    const providerEl = this.buttonEl.createSpan({ cls: 'opencode-provider-label' });
+    providerEl.setText(displayModel?.providerLabel || 'Provider');
+
+    // Model label (right side)
+    const modelEl = this.buttonEl.createSpan({ cls: 'opencode-model-label' });
+    modelEl.setText(displayModel?.label || 'Select model');
+
+    // Chevron
+    const chevronEl = this.buttonEl.createDiv({ cls: 'opencode-provider-chevron' });
+    setIcon(chevronEl, 'chevron-down');
+  }
+
+  private renderOptions() {
+    if (!this.dropdownEl) return;
+    this.dropdownEl.empty();
+
+    const settings = this.callbacks.getSettings();
+    const models = this.getProviderModels();
+    const currentModel = settings.model;
+
+    // Group by provider
+    const byProvider = new Map<string, typeof models>();
+    for (const model of models) {
+      const existing = byProvider.get(model.provider);
+      if (existing) {
+        existing.push(model);
+      } else {
+        byProvider.set(model.provider, [model]);
+      }
+    }
+
+    for (const [provider, providerModels] of byProvider) {
+      // Provider header
+      const header = this.dropdownEl.createDiv({ cls: 'opencode-provider-header' });
+      header.setText(provider.charAt(0).toUpperCase() + provider.slice(1));
+
+      // Models for this provider
+      for (const model of [...providerModels].reverse()) {
+        const option = this.dropdownEl.createDiv({ cls: 'opencode-provider-model-option' });
+        if (model.value === currentModel) {
+          option.addClass('selected');
+        }
+
+        const labelEl = option.createSpan({ cls: 'opencode-provider-model-option-label' });
+        labelEl.setText(model.label);
+
+        if (model.description) {
+          option.setAttribute('title', model.description);
+        }
+
+        option.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await this.callbacks.onModelChange(model.value);
+          this.updateDisplay();
+          this.renderOptions();
+        });
+      }
+    }
+
+    if (models.length === 0) {
+      const emptyEl = this.dropdownEl.createDiv({ cls: 'opencode-provider-model-empty' });
+      emptyEl.setText('No models available');
+    }
+  }
+}
+
 /** Thinking budget selector component. */
 export class ThinkingBudgetSelector {
   private container: HTMLElement;
@@ -139,17 +286,62 @@ export class ThinkingBudgetSelector {
 
   constructor(parentEl: HTMLElement, callbacks: ToolbarCallbacks) {
     this.callbacks = callbacks;
-    this.container = parentEl.createDiv({ cls: 'claudian-thinking-selector' });
+    this.container = parentEl.createDiv({ cls: 'opencode-thinking-selector' });
     this.render();
+  }
+
+  /** Check if the current model supports reasoning/variants. */
+  private currentModelSupportsReasoning(): boolean {
+    const settings = this.callbacks.getSettings();
+
+    // Check if using OpenCode backend
+    if (settings.agentBackend === 'opencode') {
+      if (settings.opencodeModels && settings.opencodeModels.length > 0) {
+        const currentModel = settings.opencodeModels.find(m => m.value === settings.model);
+        
+        if (!currentModel?.reasoning) {
+          return false;
+        }
+
+        // OpenCode excludes certain providers even if capabilities.reasoning is true
+        // See: opencode/packages/opencode/src/provider/transform.ts variants()
+        const excludedProviders = ['deepseek', 'minimax', 'glm', 'mistral'];
+        const providerId = currentModel.provider.toLowerCase();
+        const modelId = currentModel.modelId.toLowerCase();
+        
+        const isExcluded = excludedProviders.some(p => 
+          providerId.includes(p) || modelId.includes(p)
+        );
+        
+        if (isExcluded) {
+          return false;
+        }
+
+        return true;
+      }
+
+      // If no models loaded, default to enabled (allow user to retry)
+      return true;
+    }
+
+    // For Claude Code, all models support thinking
+    return true;
   }
 
   private render() {
     this.container.empty();
 
-    const labelEl = this.container.createSpan({ cls: 'claudian-thinking-label-text' });
-    labelEl.setText('Thinking:');
+    const labelEl = this.container.createSpan({ cls: 'opencode-thinking-label-text' });
+    
+    // Show "Variant" for OpenCode (uses variants instead of thinking budget)
+    const settings = this.callbacks.getSettings();
+    if (settings.agentBackend === 'opencode') {
+      labelEl.setText('Variant:');
+    } else {
+      labelEl.setText('Thinking:');
+    }
 
-    this.gearsEl = this.container.createDiv({ cls: 'claudian-thinking-gears' });
+    this.gearsEl = this.container.createDiv({ cls: 'opencode-thinking-gears' });
     this.renderGears();
   }
 
@@ -157,16 +349,27 @@ export class ThinkingBudgetSelector {
     if (!this.gearsEl) return;
     this.gearsEl.empty();
 
-    const currentBudget = this.callbacks.getSettings().thinkingBudget;
+    const settings = this.callbacks.getSettings();
+    const supportsReasoning = this.currentModelSupportsReasoning();
+
+    // If current model doesn't support reasoning, show "N/A"
+    if (!supportsReasoning) {
+      const currentEl = this.gearsEl.createDiv({ cls: 'opencode-thinking-current' });
+      currentEl.setText('N/A');
+      currentEl.style.opacity = '0.5';
+      return;
+    }
+
+    const currentBudget = settings.thinkingBudget;
     const currentBudgetInfo = THINKING_BUDGETS.find(b => b.value === currentBudget);
 
-    const currentEl = this.gearsEl.createDiv({ cls: 'claudian-thinking-current' });
+    const currentEl = this.gearsEl.createDiv({ cls: 'opencode-thinking-current' });
     currentEl.setText(currentBudgetInfo?.label || 'Off');
 
-    const optionsEl = this.gearsEl.createDiv({ cls: 'claudian-thinking-options' });
+    const optionsEl = this.gearsEl.createDiv({ cls: 'opencode-thinking-options' });
 
     for (const budget of [...THINKING_BUDGETS].reverse()) {
-      const gearEl = optionsEl.createDiv({ cls: 'claudian-thinking-gear' });
+      const gearEl = optionsEl.createDiv({ cls: 'opencode-thinking-gear' });
       gearEl.setText(budget.label);
       gearEl.setAttribute('title', budget.tokens > 0 ? `${budget.tokens.toLocaleString()} tokens` : 'Disabled');
 
@@ -196,15 +399,15 @@ export class PermissionToggle {
 
   constructor(parentEl: HTMLElement, callbacks: ToolbarCallbacks) {
     this.callbacks = callbacks;
-    this.container = parentEl.createDiv({ cls: 'claudian-permission-toggle' });
+    this.container = parentEl.createDiv({ cls: 'opencode-permission-toggle' });
     this.render();
   }
 
   private render() {
     this.container.empty();
 
-    this.labelEl = this.container.createSpan({ cls: 'claudian-permission-label' });
-    this.toggleEl = this.container.createDiv({ cls: 'claudian-toggle-switch' });
+    this.labelEl = this.container.createSpan({ cls: 'opencode-permission-label' });
+    this.toggleEl = this.container.createDiv({ cls: 'opencode-toggle-switch' });
 
     this.updateDisplay();
 
@@ -254,7 +457,7 @@ export class ExternalContextSelector {
 
   constructor(parentEl: HTMLElement, callbacks: ToolbarCallbacks) {
     this.callbacks = callbacks;
-    this.container = parentEl.createDiv({ cls: 'claudian-external-context-selector' });
+    this.container = parentEl.createDiv({ cls: 'opencode-external-context-selector' });
     this.render();
   }
 
@@ -370,12 +573,12 @@ export class ExternalContextSelector {
   private render() {
     this.container.empty();
 
-    const iconWrapper = this.container.createDiv({ cls: 'claudian-external-context-icon-wrapper' });
+    const iconWrapper = this.container.createDiv({ cls: 'opencode-external-context-icon-wrapper' });
 
-    this.iconEl = iconWrapper.createDiv({ cls: 'claudian-external-context-icon' });
+    this.iconEl = iconWrapper.createDiv({ cls: 'opencode-external-context-icon' });
     setIcon(this.iconEl, 'folder');
 
-    this.badgeEl = iconWrapper.createDiv({ cls: 'claudian-external-context-badge' });
+    this.badgeEl = iconWrapper.createDiv({ cls: 'opencode-external-context-badge' });
 
     this.updateDisplay();
 
@@ -385,7 +588,7 @@ export class ExternalContextSelector {
       this.openFolderPicker();
     });
 
-    this.dropdownEl = this.container.createDiv({ cls: 'claudian-external-context-dropdown' });
+    this.dropdownEl = this.container.createDiv({ cls: 'opencode-external-context-dropdown' });
     this.renderDropdown();
   }
 
@@ -447,20 +650,20 @@ export class ExternalContextSelector {
     this.dropdownEl.empty();
 
     // Header
-    const headerEl = this.dropdownEl.createDiv({ cls: 'claudian-external-context-header' });
+    const headerEl = this.dropdownEl.createDiv({ cls: 'opencode-external-context-header' });
     headerEl.setText('External Contexts');
 
     // Path list
-    const listEl = this.dropdownEl.createDiv({ cls: 'claudian-external-context-list' });
+    const listEl = this.dropdownEl.createDiv({ cls: 'opencode-external-context-list' });
 
     if (this.externalContextPaths.length === 0) {
-      const emptyEl = listEl.createDiv({ cls: 'claudian-external-context-empty' });
+      const emptyEl = listEl.createDiv({ cls: 'opencode-external-context-empty' });
       emptyEl.setText('Click folder icon to add');
     } else {
       for (const pathStr of this.externalContextPaths) {
-        const itemEl = listEl.createDiv({ cls: 'claudian-external-context-item' });
+        const itemEl = listEl.createDiv({ cls: 'opencode-external-context-item' });
 
-        const pathTextEl = itemEl.createSpan({ cls: 'claudian-external-context-text' });
+        const pathTextEl = itemEl.createSpan({ cls: 'opencode-external-context-text' });
         // Show shortened path for display
         const displayPath = this.shortenPath(pathStr);
         pathTextEl.setText(displayPath);
@@ -468,7 +671,7 @@ export class ExternalContextSelector {
 
         // Lock toggle button
         const isPersistent = this.persistentPaths.has(pathStr);
-        const lockBtn = itemEl.createSpan({ cls: 'claudian-external-context-lock' });
+        const lockBtn = itemEl.createSpan({ cls: 'opencode-external-context-lock' });
         if (isPersistent) {
           lockBtn.addClass('locked');
         }
@@ -479,7 +682,7 @@ export class ExternalContextSelector {
           this.togglePersistence(pathStr);
         });
 
-        const removeBtn = itemEl.createSpan({ cls: 'claudian-external-context-remove' });
+        const removeBtn = itemEl.createSpan({ cls: 'opencode-external-context-remove' });
         setIcon(removeBtn, 'x');
         removeBtn.setAttribute('title', 'Remove path');
         removeBtn.addEventListener('click', (e) => {
@@ -551,7 +754,7 @@ export class McpServerSelector {
   private onChangeCallback: ((enabled: Set<string>) => void) | null = null;
 
   constructor(parentEl: HTMLElement) {
-    this.container = parentEl.createDiv({ cls: 'claudian-mcp-selector' });
+    this.container = parentEl.createDiv({ cls: 'opencode-mcp-selector' });
     this.render();
   }
 
@@ -621,16 +824,16 @@ export class McpServerSelector {
   private render() {
     this.container.empty();
 
-    const iconWrapper = this.container.createDiv({ cls: 'claudian-mcp-selector-icon-wrapper' });
+    const iconWrapper = this.container.createDiv({ cls: 'opencode-mcp-selector-icon-wrapper' });
 
-    this.iconEl = iconWrapper.createDiv({ cls: 'claudian-mcp-selector-icon' });
+    this.iconEl = iconWrapper.createDiv({ cls: 'opencode-mcp-selector-icon' });
     this.iconEl.innerHTML = MCP_ICON_SVG;
 
-    this.badgeEl = iconWrapper.createDiv({ cls: 'claudian-mcp-selector-badge' });
+    this.badgeEl = iconWrapper.createDiv({ cls: 'opencode-mcp-selector-badge' });
 
     this.updateDisplay();
 
-    this.dropdownEl = this.container.createDiv({ cls: 'claudian-mcp-selector-dropdown' });
+    this.dropdownEl = this.container.createDiv({ cls: 'opencode-mcp-selector-dropdown' });
     this.renderDropdown();
 
     // Re-render dropdown content on hover (CSS handles visibility)
@@ -645,17 +848,17 @@ export class McpServerSelector {
     this.dropdownEl.empty();
 
     // Header
-    const headerEl = this.dropdownEl.createDiv({ cls: 'claudian-mcp-selector-header' });
+    const headerEl = this.dropdownEl.createDiv({ cls: 'opencode-mcp-selector-header' });
     headerEl.setText('MCP Servers');
 
     // Server list
-    const listEl = this.dropdownEl.createDiv({ cls: 'claudian-mcp-selector-list' });
+    const listEl = this.dropdownEl.createDiv({ cls: 'opencode-mcp-selector-list' });
 
     const allServers = this.mcpService?.getServers() || [];
     const servers = allServers.filter(s => s.enabled);
 
     if (servers.length === 0) {
-      const emptyEl = listEl.createDiv({ cls: 'claudian-mcp-selector-empty' });
+      const emptyEl = listEl.createDiv({ cls: 'opencode-mcp-selector-empty' });
       emptyEl.setText(allServers.length === 0 ? 'No MCP servers configured' : 'All MCP servers disabled');
       return;
     }
@@ -666,7 +869,7 @@ export class McpServerSelector {
   }
 
   private renderServerItem(listEl: HTMLElement, server: ClaudianMcpServer) {
-    const itemEl = listEl.createDiv({ cls: 'claudian-mcp-selector-item' });
+    const itemEl = listEl.createDiv({ cls: 'opencode-mcp-selector-item' });
     itemEl.dataset.serverName = server.name;
 
     const isEnabled = this.enabledServers.has(server.name);
@@ -675,20 +878,20 @@ export class McpServerSelector {
     }
 
     // Checkbox
-    const checkEl = itemEl.createDiv({ cls: 'claudian-mcp-selector-check' });
+    const checkEl = itemEl.createDiv({ cls: 'opencode-mcp-selector-check' });
     if (isEnabled) {
       checkEl.innerHTML = CHECK_ICON_SVG;
     }
 
     // Info
-    const infoEl = itemEl.createDiv({ cls: 'claudian-mcp-selector-item-info' });
+    const infoEl = itemEl.createDiv({ cls: 'opencode-mcp-selector-item-info' });
 
-    const nameEl = infoEl.createSpan({ cls: 'claudian-mcp-selector-item-name' });
+    const nameEl = infoEl.createSpan({ cls: 'opencode-mcp-selector-item-name' });
     nameEl.setText(server.name);
 
     // Badges
     if (server.contextSaving) {
-      const csEl = infoEl.createSpan({ cls: 'claudian-mcp-selector-cs-badge' });
+      const csEl = infoEl.createSpan({ cls: 'opencode-mcp-selector-cs-badge' });
       csEl.setText('@');
       csEl.setAttribute('title', 'Context-saving: can also enable via @' + server.name);
     }
@@ -710,7 +913,7 @@ export class McpServerSelector {
 
     // Update item visually in-place (immediate feedback)
     const isEnabled = this.enabledServers.has(name);
-    const checkEl = itemEl.querySelector('.claudian-mcp-selector-check') as HTMLElement | null;
+    const checkEl = itemEl.querySelector('.opencode-mcp-selector-check') as HTMLElement | null;
 
     if (isEnabled) {
       itemEl.addClass('enabled');
@@ -765,7 +968,7 @@ export class ContextUsageMeter {
   private circumference: number = 0;
 
   constructor(parentEl: HTMLElement) {
-    this.container = parentEl.createDiv({ cls: 'claudian-context-meter' });
+    this.container = parentEl.createDiv({ cls: 'opencode-context-meter' });
     this.render();
     // Initially hidden
     this.container.style.display = 'none';
@@ -792,21 +995,21 @@ export class ContextUsageMeter {
     const x2 = cx + radius * Math.cos(endRad);
     const y2 = cy + radius * Math.sin(endRad);
 
-    const gaugeEl = this.container.createDiv({ cls: 'claudian-context-meter-gauge' });
+    const gaugeEl = this.container.createDiv({ cls: 'opencode-context-meter-gauge' });
     gaugeEl.innerHTML = `
       <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-        <path class="claudian-meter-bg"
+        <path class="opencode-meter-bg"
           d="M ${x1} ${y1} A ${radius} ${radius} 0 1 1 ${x2} ${y2}"
           fill="none" stroke-width="${strokeWidth}" stroke-linecap="round"/>
-        <path class="claudian-meter-fill"
+        <path class="opencode-meter-fill"
           d="M ${x1} ${y1} A ${radius} ${radius} 0 1 1 ${x2} ${y2}"
           fill="none" stroke-width="${strokeWidth}" stroke-linecap="round"
           stroke-dasharray="${this.circumference}" stroke-dashoffset="${this.circumference}"/>
       </svg>
     `;
-    this.fillPath = gaugeEl.querySelector('.claudian-meter-fill');
+    this.fillPath = gaugeEl.querySelector('.opencode-meter-fill');
 
-    this.percentEl = this.container.createSpan({ cls: 'claudian-context-meter-percent' });
+    this.percentEl = this.container.createSpan({ cls: 'opencode-context-meter-percent' });
   }
 
   update(usage: UsageInfo | null): void {
@@ -845,26 +1048,185 @@ export class ContextUsageMeter {
   }
 }
 
-/** Factory function to create all toolbar components. */
+/** Agent selector component for OpenCode backend (simple text button with dropdown). */
+export class AgentSelector {
+  private container: HTMLElement;
+  private buttonEl: HTMLElement | null = null;
+  private dropdownEl: HTMLElement | null = null;
+  private callbacks: ToolbarCallbacks;
+
+  constructor(parentEl: HTMLElement, callbacks: ToolbarCallbacks) {
+    this.callbacks = callbacks;
+    this.container = parentEl.createDiv({ cls: 'opencode-agent-selector' });
+    this.render();
+  }
+
+  private render() {
+    this.container.empty();
+
+    this.buttonEl = this.container.createDiv({ cls: 'opencode-agent-btn' });
+    this.updateDisplay();
+
+    this.dropdownEl = this.container.createDiv({ cls: 'opencode-agent-dropdown' });
+    this.renderOptions();
+  }
+
+  private getAvailableAgents() {
+    const settings = this.callbacks.getSettings();
+    if (settings.agentBackend === 'opencode' && settings.opencodeAgents && settings.opencodeAgents.length > 0) {
+      return settings.opencodeAgents;
+    }
+    // Default agents for OpenCode
+    return [
+      { value: 'sisyphus', name: 'Sisyphus', description: 'General purpose coding agent' },
+      { value: 'build', name: 'Build', description: 'Build and deployment specialist' },
+      { value: 'plan', name: 'Plan', description: 'Planning and analysis agent' },
+    ];
+  }
+
+  updateDisplay() {
+    if (!this.buttonEl) return;
+    const settings = this.callbacks.getSettings();
+    const agents = this.getAvailableAgents();
+    const currentAgent = agents.find(a => a.value === settings.currentAgent) || agents[0];
+
+    this.buttonEl.empty();
+
+    const labelEl = this.buttonEl.createSpan({ cls: 'opencode-agent-label' });
+    labelEl.setText(currentAgent?.name || 'Agent');
+
+    const chevronEl = this.buttonEl.createDiv({ cls: 'opencode-agent-chevron' });
+    setIcon(chevronEl, 'chevron-down');
+  }
+
+  private renderOptions() {
+    if (!this.dropdownEl) return;
+    this.dropdownEl.empty();
+
+    const settings = this.callbacks.getSettings();
+    const agents = this.getAvailableAgents();
+
+    for (const agent of agents) {
+      const option = this.dropdownEl.createDiv({ cls: 'opencode-agent-option' });
+      if (agent.value === settings.currentAgent) {
+        option.addClass('selected');
+      }
+
+      const nameEl = option.createSpan({ cls: 'opencode-agent-option-name' });
+      nameEl.setText(agent.name);
+
+      option.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (this.callbacks.onAgentChange) {
+          await this.callbacks.onAgentChange(agent.value);
+        }
+        this.updateDisplay();
+        this.renderOptions();
+      });
+    }
+  }
+}
+
+/** Send button component for OpenCode (primary variant with arrow icon). */
+export class SendButton {
+  private container: HTMLElement;
+  private callbacks: ToolbarCallbacks;
+
+  constructor(parentEl: HTMLElement, callbacks: ToolbarCallbacks) {
+    this.callbacks = callbacks;
+    this.container = parentEl.createDiv({ cls: 'opencode-send-btn' });
+    this.render();
+  }
+
+  private render() {
+    this.container.empty();
+
+    // Primary send button with arrow-up icon
+    this.container.addClass('opencode-send-btn-primary');
+    const iconWrapper = this.container.createDiv({ cls: 'opencode-send-icon' });
+    setIcon(iconWrapper, 'arrow-up');
+
+    this.container.setAttribute('title', 'Send (Enter)');
+    this.container.addEventListener('click', () => {
+      if (this.callbacks.onSendClick) {
+        this.callbacks.onSendClick();
+      }
+    });
+  }
+}
+
+/** Result structure for toolbar creation */
+export interface ToolbarComponents {
+  /** Claude Code only: model selector */
+  modelSelector: ModelSelector | null;
+  /** OpenCode only: provider/model selector */
+  providerModelSelector: ProviderModelSelector | null;
+  thinkingBudgetSelector: ThinkingBudgetSelector;
+  contextUsageMeter: ContextUsageMeter | null;
+  /** Claude Code only: permission toggle */
+  permissionToggle: PermissionToggle | null;
+  /** OpenCode only: agent selector */
+  agentSelector: AgentSelector | null;
+  /** OpenCode only: send button */
+  sendButton: SendButton | null;
+}
+
+/** Factory function to create toolbar components based on backend type. */
 export function createInputToolbar(
   parentEl: HTMLElement,
   callbacks: ToolbarCallbacks
-): {
-  modelSelector: ModelSelector;
-  thinkingBudgetSelector: ThinkingBudgetSelector;
-  contextUsageMeter: ContextUsageMeter | null;
-  externalContextSelector: ExternalContextSelector;
-  mcpServerSelector: McpServerSelector;
-  permissionToggle: PermissionToggle;
-} {
-  const modelSelector = new ModelSelector(parentEl, callbacks);
-  const thinkingBudgetSelector = new ThinkingBudgetSelector(parentEl, callbacks);
-  // TODO: Context usage meter temporarily hidden
-  // const contextUsageMeter = new ContextUsageMeter(parentEl);
-  const contextUsageMeter = null;
-  const externalContextSelector = new ExternalContextSelector(parentEl, callbacks);
-  const mcpServerSelector = new McpServerSelector(parentEl);
-  const permissionToggle = new PermissionToggle(parentEl, callbacks);
+): ToolbarComponents {
+  const settings = callbacks.getSettings();
+  const isOpenCode = settings.agentBackend === 'opencode';
 
-  return { modelSelector, thinkingBudgetSelector, contextUsageMeter, externalContextSelector, mcpServerSelector, permissionToggle };
+  // Create mode-specific container classes
+  const container = parentEl.createDiv({
+    cls: `opencode-input-toolbar ${isOpenCode ? 'opencode-mode' : 'claude-code-mode'}`
+  });
+
+  // Create left and right sections
+  const leftSection = container.createDiv({ cls: 'opencode-toolbar-left' });
+  const rightSection = container.createDiv({ cls: 'opencode-toolbar-right' });
+
+  // Component references
+  let modelSelector: ModelSelector | null = null;
+  let providerModelSelector: ProviderModelSelector | null = null;
+  let permissionToggle: PermissionToggle | null = null;
+  let agentSelector: AgentSelector | null = null;
+  let sendButton: SendButton | null = null;
+
+  if (isOpenCode) {
+    // OpenCode: left = Agent + ProviderModel + Variant, right = Send
+    agentSelector = new AgentSelector(leftSection, callbacks);
+    providerModelSelector = new ProviderModelSelector(leftSection, callbacks);
+    const thinkingBudgetSelector = new ThinkingBudgetSelector(leftSection, callbacks);
+    sendButton = new SendButton(rightSection, callbacks);
+
+    return {
+      modelSelector,
+      providerModelSelector,
+      thinkingBudgetSelector,
+      contextUsageMeter: null,
+      permissionToggle,
+      agentSelector,
+      sendButton,
+    };
+  } else {
+    // Claude Code: left = Model + Thinking + Permission, right = External + MCP
+    modelSelector = new ModelSelector(leftSection, callbacks);
+    const thinkingBudgetSelector = new ThinkingBudgetSelector(leftSection, callbacks);
+    permissionToggle = new PermissionToggle(leftSection, callbacks);
+    new ExternalContextSelector(rightSection, callbacks);
+    new McpServerSelector(rightSection);
+
+    return {
+      modelSelector,
+      providerModelSelector,
+      thinkingBudgetSelector,
+      contextUsageMeter: null,
+      permissionToggle,
+      agentSelector,
+      sendButton,
+    };
+  }
 }

@@ -7,6 +7,7 @@
 
 import { setIcon } from 'obsidian';
 
+import type { IAgentService } from '../../../core/agent/IAgentService';
 import type { ClaudianService } from '../../../core/agent';
 import { extractLastTodosFromMessages } from '../../../core/tools';
 import type { Conversation } from '../../../core/types';
@@ -46,7 +47,7 @@ export interface ConversationControllerDeps {
   /** Get TodoPanel for remounting after messagesEl.empty(). */
   getTodoPanel: () => TodoPanel | null;
   /** Get the agent service (for multi-tab, returns tab's service). */
-  getAgentService?: () => ClaudianService | null;
+  getAgentService?: () => IAgentService | null;
 }
 
 /**
@@ -62,7 +63,7 @@ export class ConversationController {
   }
 
   /** Gets the agent service from the tab. */
-  private getAgentService(): ClaudianService | null {
+  private getAgentService(): IAgentService | null {
     return this.deps.getAgentService?.() ?? null;
   }
 
@@ -125,8 +126,8 @@ export class ConversationController {
       messagesEl.empty();
 
       // Recreate welcome element first (before TodoPanel for consistent ordering)
-      const welcomeEl = messagesEl.createDiv({ cls: 'claudian-welcome' });
-      welcomeEl.createDiv({ cls: 'claudian-welcome-greeting', text: this.getGreeting() });
+      const welcomeEl = messagesEl.createDiv({ cls: 'opencode-welcome' });
+      welcomeEl.createDiv({ cls: 'opencode-welcome-greeting', text: this.getGreeting() });
       this.deps.setWelcomeEl(welcomeEl);
 
       // Remount TodoPanel after welcome (messagesEl.empty() removes it from DOM)
@@ -451,14 +452,14 @@ export class ConversationController {
 
     container.empty();
 
-    const dropdownHeader = container.createDiv({ cls: 'claudian-history-header' });
+    const dropdownHeader = container.createDiv({ cls: 'opencode-history-header' });
     dropdownHeader.createSpan({ text: 'Conversations' });
 
-    const list = container.createDiv({ cls: 'claudian-history-list' });
+    const list = container.createDiv({ cls: 'opencode-history-list' });
     const allConversations = plugin.getConversationList();
 
     if (allConversations.length === 0) {
-      list.createDiv({ cls: 'claudian-history-empty', text: 'No conversations' });
+      list.createDiv({ cls: 'opencode-history-empty', text: 'No conversations' });
       return;
     }
 
@@ -470,17 +471,17 @@ export class ConversationController {
     for (const conv of conversations) {
       const isCurrent = conv.id === state.currentConversationId;
       const item = list.createDiv({
-        cls: `claudian-history-item${isCurrent ? ' active' : ''}`,
+        cls: `opencode-history-item${isCurrent ? ' active' : ''}`,
       });
 
-      const iconEl = item.createDiv({ cls: 'claudian-history-item-icon' });
+      const iconEl = item.createDiv({ cls: 'opencode-history-item-icon' });
       setIcon(iconEl, isCurrent ? 'message-square-dot' : 'message-square');
 
-      const content = item.createDiv({ cls: 'claudian-history-item-content' });
-      const titleEl = content.createDiv({ cls: 'claudian-history-item-title', text: conv.title });
+      const content = item.createDiv({ cls: 'opencode-history-item-content' });
+      const titleEl = content.createDiv({ cls: 'opencode-history-item-title', text: conv.title });
       titleEl.setAttribute('title', conv.title);
       content.createDiv({
-        cls: 'claudian-history-item-date',
+        cls: 'opencode-history-item-date',
         text: isCurrent ? 'Current session' : this.formatDate(conv.lastResponseAt ?? conv.createdAt),
       });
 
@@ -495,15 +496,15 @@ export class ConversationController {
         });
       }
 
-      const actions = item.createDiv({ cls: 'claudian-history-item-actions' });
+      const actions = item.createDiv({ cls: 'opencode-history-item-actions' });
 
       // Show regenerate button if title generation failed, or loading indicator if pending
       if (conv.titleGenerationStatus === 'pending') {
-        const loadingEl = actions.createEl('span', { cls: 'claudian-action-btn claudian-action-loading' });
+        const loadingEl = actions.createEl('span', { cls: 'opencode-action-btn opencode-action-loading' });
         setIcon(loadingEl, 'loader-2');
         loadingEl.setAttribute('aria-label', 'Generating title...');
       } else if (conv.titleGenerationStatus === 'failed') {
-        const regenerateBtn = actions.createEl('button', { cls: 'claudian-action-btn' });
+        const regenerateBtn = actions.createEl('button', { cls: 'opencode-action-btn' });
         setIcon(regenerateBtn, 'refresh-cw');
         regenerateBtn.setAttribute('aria-label', 'Regenerate title');
         regenerateBtn.addEventListener('click', async (e) => {
@@ -516,7 +517,7 @@ export class ConversationController {
         });
       }
 
-      const renameBtn = actions.createEl('button', { cls: 'claudian-action-btn' });
+      const renameBtn = actions.createEl('button', { cls: 'opencode-action-btn' });
       setIcon(renameBtn, 'pencil');
       renameBtn.setAttribute('aria-label', 'Rename');
       renameBtn.addEventListener('click', (e) => {
@@ -524,7 +525,7 @@ export class ConversationController {
         this.showRenameInput(item, conv.id, conv.title);
       });
 
-      const deleteBtn = actions.createEl('button', { cls: 'claudian-action-btn claudian-delete-btn' });
+      const deleteBtn = actions.createEl('button', { cls: 'opencode-action-btn opencode-delete-btn' });
       setIcon(deleteBtn, 'trash-2');
       deleteBtn.setAttribute('aria-label', 'Delete');
       deleteBtn.addEventListener('click', async (e) => {
@@ -546,12 +547,12 @@ export class ConversationController {
 
   /** Shows inline rename input for a conversation. */
   private showRenameInput(item: HTMLElement, convId: string, currentTitle: string): void {
-    const titleEl = item.querySelector('.claudian-history-item-title') as HTMLElement;
+    const titleEl = item.querySelector('.opencode-history-item-title') as HTMLElement;
     if (!titleEl) return;
 
     const input = document.createElement('input');
     input.type = 'text';
-    input.className = 'claudian-rename-input';
+    input.className = 'opencode-rename-input';
     input.value = currentTitle;
 
     titleEl.replaceWith(input);
@@ -666,8 +667,8 @@ export class ConversationController {
     fileCtx?.autoAttachActiveFile();
 
     // Only add greeting if not already present
-    if (!welcomeEl.querySelector('.claudian-welcome-greeting')) {
-      welcomeEl.createDiv({ cls: 'claudian-welcome-greeting', text: this.getGreeting() });
+    if (!welcomeEl.querySelector('.opencode-welcome-greeting')) {
+      welcomeEl.createDiv({ cls: 'opencode-welcome-greeting', text: this.getGreeting() });
     }
 
     this.updateWelcomeVisibility();
@@ -759,12 +760,12 @@ export class ConversationController {
   }
 
   // ============================================
-  // History Dropdown Rendering (for ClaudianView)
+  // History Dropdown Rendering (for OpencodeView)
   // ============================================
 
   /**
    * Renders the history dropdown content to a provided container.
-   * Used by ClaudianView to render the dropdown with custom selection callback.
+   * Used by OpencodeView to render the dropdown with custom selection callback.
    */
   renderHistoryDropdown(
     container: HTMLElement,

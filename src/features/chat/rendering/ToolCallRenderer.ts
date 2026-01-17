@@ -126,12 +126,12 @@ export function renderWebSearchResult(container: HTMLElement, result: string, ma
 
   const displayItems = links.slice(0, maxItems);
   displayItems.forEach(link => {
-    const item = container.createSpan({ cls: 'claudian-tool-result-bullet' });
+    const item = container.createSpan({ cls: 'opencode-tool-result-bullet' });
     item.setText(`• ${link.title}`);
   });
 
   if (links.length > maxItems) {
-    const more = container.createSpan({ cls: 'claudian-tool-result-item' });
+    const more = container.createSpan({ cls: 'opencode-tool-result-item' });
     more.setText(`${links.length - maxItems} more results`);
   }
 
@@ -142,7 +142,7 @@ export function renderWebSearchResult(container: HTMLElement, result: string, ma
 export function renderReadResult(container: HTMLElement, result: string): void {
   container.empty();
   const lines = result.split(/\r?\n/).filter(line => line.trim() !== '');
-  const item = container.createSpan({ cls: 'claudian-tool-result-item' });
+  const item = container.createSpan({ cls: 'opencode-tool-result-item' });
   item.setText(`${lines.length} lines read`);
 }
 
@@ -152,26 +152,26 @@ export function renderTodoWriteResult(
   input: Record<string, unknown>
 ): void {
   container.empty();
-  container.addClass('claudian-todo-panel-content');
+  container.addClass('opencode-todo-panel-content');
 
   const todos = input.todos as Array<{ content: string; status: string; activeForm: string }> | undefined;
   if (!todos || !Array.isArray(todos)) {
-    const item = container.createSpan({ cls: 'claudian-tool-result-item' });
+    const item = container.createSpan({ cls: 'opencode-tool-result-item' });
     item.setText('Tasks updated');
     return;
   }
 
   for (const todo of todos) {
-    const item = container.createDiv({ cls: `claudian-todo-item claudian-todo-${todo.status}` });
+    const item = container.createDiv({ cls: `opencode-todo-item opencode-todo-${todo.status}` });
 
-    const icon = item.createSpan({ cls: 'claudian-todo-status-icon' });
+    const icon = item.createSpan({ cls: 'opencode-todo-status-icon' });
     if (todo.status === 'completed') {
       setIcon(icon, 'check');
     } else {
       setIcon(icon, 'dot');
     }
 
-    const text = item.createSpan({ cls: 'claudian-todo-text' });
+    const text = item.createSpan({ cls: 'opencode-todo-text' });
     text.setText(todo.status === 'in_progress' ? todo.activeForm : todo.content);
   }
 }
@@ -186,12 +186,12 @@ export function renderResultLines(container: HTMLElement, result: string, maxLin
   displayLines.forEach(line => {
     // Strip line number prefix (e.g., "  1→" or "123→")
     const stripped = line.replace(/^\s*\d+→/, '');
-    const item = container.createSpan({ cls: 'claudian-tool-result-item' });
+    const item = container.createSpan({ cls: 'opencode-tool-result-item' });
     item.setText(stripped);
   });
 
   if (lines.length > maxLines) {
-    const more = container.createSpan({ cls: 'claudian-tool-result-item' });
+    const more = container.createSpan({ cls: 'opencode-tool-result-item' });
     more.setText(`${lines.length - maxLines} more lines`);
   }
 }
@@ -227,45 +227,45 @@ export function renderToolCall(
   toolCall: ToolCallInfo,
   toolCallElements: Map<string, HTMLElement>
 ): HTMLElement {
-  const toolEl = parentEl.createDiv({ cls: 'claudian-tool-call' });
+  const toolEl = parentEl.createDiv({ cls: 'opencode-tool-call' });
   toolEl.dataset.toolId = toolCall.id;
   toolCallElements.set(toolCall.id, toolEl);
 
   // Header (clickable to expand/collapse)
-  const header = toolEl.createDiv({ cls: 'claudian-tool-header' });
+  const header = toolEl.createDiv({ cls: 'opencode-tool-header' });
   header.setAttribute('tabindex', '0');
   header.setAttribute('role', 'button');
   // aria-label is set dynamically by setupCollapsible based on expand state
 
   // Tool icon (decorative)
-  const iconEl = header.createSpan({ cls: 'claudian-tool-icon' });
+  const iconEl = header.createSpan({ cls: 'opencode-tool-icon' });
   iconEl.setAttribute('aria-hidden', 'true');
   setToolIcon(iconEl, toolCall.name);
 
   // Tool label
-  const labelEl = header.createSpan({ cls: 'claudian-tool-label' });
+  const labelEl = header.createSpan({ cls: 'opencode-tool-label' });
   labelEl.setText(getToolLabel(toolCall.name, toolCall.input));
 
   // Status indicator
-  const statusEl = header.createSpan({ cls: 'claudian-tool-status' });
+  const statusEl = header.createSpan({ cls: 'opencode-tool-status' });
   statusEl.addClass(`status-${toolCall.status}`);
   statusEl.setAttribute('aria-label', `Status: ${toolCall.status}`);
   if (toolCall.status === 'running') {
-    statusEl.createSpan({ cls: 'claudian-spinner' });
+    statusEl.createSpan({ cls: 'opencode-spinner' });
   }
 
   // Collapsible content
-  const content = toolEl.createDiv({ cls: 'claudian-tool-content' });
+  const content = toolEl.createDiv({ cls: 'opencode-tool-content' });
 
   // TodoWrite: render todo list directly (same as panel, no branch)
   if (toolCall.name === 'TodoWrite') {
     renderTodoWriteResult(content, toolCall.input);
   } else {
     // Tree-branch result row for other tools
-    const resultRow = content.createDiv({ cls: 'claudian-tool-result-row' });
-    const branch = resultRow.createSpan({ cls: 'claudian-tool-branch' });
+    const resultRow = content.createDiv({ cls: 'opencode-tool-result-row' });
+    const branch = resultRow.createSpan({ cls: 'opencode-tool-branch' });
     branch.setText('└─');
-    const resultText = resultRow.createSpan({ cls: 'claudian-tool-result-text' });
+    const resultText = resultRow.createSpan({ cls: 'opencode-tool-result-text' });
     resultText.setText('Running...');
   }
 
@@ -291,9 +291,9 @@ export function updateToolCallResult(
   if (!toolEl) return;
 
   // Update status indicator
-  const statusEl = toolEl.querySelector('.claudian-tool-status');
+  const statusEl = toolEl.querySelector('.opencode-tool-status');
   if (statusEl) {
-    statusEl.className = 'claudian-tool-status';
+    statusEl.className = 'opencode-tool-status';
     statusEl.addClass(`status-${toolCall.status}`);
     statusEl.empty();
     if (toolCall.status === 'completed') {
@@ -307,7 +307,7 @@ export function updateToolCallResult(
 
   // TodoWrite: re-render to content area (no resultText element)
   if (toolCall.name === 'TodoWrite') {
-    const content = toolEl.querySelector('.claudian-tool-content') as HTMLElement;
+    const content = toolEl.querySelector('.opencode-tool-content') as HTMLElement;
     if (content) {
       renderTodoWriteResult(content, toolCall.input);
     }
@@ -315,7 +315,7 @@ export function updateToolCallResult(
   }
 
   // Update result text (max 3 lines) for other tools
-  const resultText = toolEl.querySelector('.claudian-tool-result-text') as HTMLElement;
+  const resultText = toolEl.querySelector('.opencode-tool-result-text') as HTMLElement;
   if (resultText && toolCall.result) {
     // Try special rendering for specific tools, otherwise use generic line renderer
     if (toolCall.name === 'WebSearch') {
@@ -335,25 +335,25 @@ export function renderStoredToolCall(
   parentEl: HTMLElement,
   toolCall: ToolCallInfo
 ): HTMLElement {
-  const toolEl = parentEl.createDiv({ cls: 'claudian-tool-call' });
+  const toolEl = parentEl.createDiv({ cls: 'opencode-tool-call' });
 
   // Header
-  const header = toolEl.createDiv({ cls: 'claudian-tool-header' });
+  const header = toolEl.createDiv({ cls: 'opencode-tool-header' });
   header.setAttribute('tabindex', '0');
   header.setAttribute('role', 'button');
   // aria-label is set dynamically by setupCollapsible based on expand state
 
   // Tool icon (decorative)
-  const iconEl = header.createSpan({ cls: 'claudian-tool-icon' });
+  const iconEl = header.createSpan({ cls: 'opencode-tool-icon' });
   iconEl.setAttribute('aria-hidden', 'true');
   setToolIcon(iconEl, toolCall.name);
 
   // Tool label
-  const labelEl = header.createSpan({ cls: 'claudian-tool-label' });
+  const labelEl = header.createSpan({ cls: 'opencode-tool-label' });
   labelEl.setText(getToolLabel(toolCall.name, toolCall.input));
 
   // Status indicator (already completed)
-  const statusEl = header.createSpan({ cls: 'claudian-tool-status' });
+  const statusEl = header.createSpan({ cls: 'opencode-tool-status' });
   statusEl.addClass(`status-${toolCall.status}`);
   statusEl.setAttribute('aria-label', `Status: ${toolCall.status}`);
   if (toolCall.status === 'completed') {
@@ -365,17 +365,17 @@ export function renderStoredToolCall(
   }
 
   // Collapsible content
-  const content = toolEl.createDiv({ cls: 'claudian-tool-content' });
+  const content = toolEl.createDiv({ cls: 'opencode-tool-content' });
 
   // TodoWrite: render directly without branch (same as panel)
   if (toolCall.name === 'TodoWrite') {
     renderTodoWriteResult(content, toolCall.input);
   } else {
     // Tree-branch result row for other tools
-    const resultRow = content.createDiv({ cls: 'claudian-tool-result-row' });
-    const branch = resultRow.createSpan({ cls: 'claudian-tool-branch' });
+    const resultRow = content.createDiv({ cls: 'opencode-tool-result-row' });
+    const branch = resultRow.createSpan({ cls: 'opencode-tool-branch' });
     branch.setText('└─');
-    const resultText = resultRow.createSpan({ cls: 'claudian-tool-result-text' });
+    const resultText = resultRow.createSpan({ cls: 'opencode-tool-result-text' });
     if (toolCall.result) {
       // Try special rendering for specific tools, otherwise use generic line renderer
       if (toolCall.name === 'WebSearch') {

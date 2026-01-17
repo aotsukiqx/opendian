@@ -11,7 +11,7 @@
 
 import type { Component } from 'obsidian';
 
-import { ClaudianService } from '../../../core/agent';
+import type { IAgentService } from '../../../core/agent/IAgentService';
 import { SlashCommandManager } from '../../../core/commands';
 import type { McpServerManager } from '../../../core/mcp';
 import type { ClaudeModel, Conversation, ThinkingBudget } from '../../../core/types';
@@ -87,7 +87,7 @@ export function createTab(options: TabCreateOptions): TabData {
   const id = tabId ?? generateTabId();
 
   // Create per-tab content container (hidden by default)
-  const contentEl = containerEl.createDiv({ cls: 'claudian-tab-content' });
+  const contentEl = containerEl.createDiv({ cls: 'opencode-tab-content' });
   contentEl.style.display = 'none';
 
   // Create ChatState with callbacks
@@ -135,10 +135,13 @@ export function createTab(options: TabCreateOptions): TabData {
       fileContextManager: null,
       imageContextManager: null,
       modelSelector: null,
+      providerModelSelector: null,
       thinkingBudgetSelector: null,
       externalContextSelector: null,
       mcpServerSelector: null,
       permissionToggle: null,
+      agentSelector: null,
+      sendButton: null,
       slashCommandManager: null,
       slashCommandDropdown: null,
       instructionModeManager: null,
@@ -166,7 +169,7 @@ function autoResizeTextarea(textarea: HTMLTextAreaElement): void {
   textarea.style.minHeight = '';
 
   // Calculate max height: 55% of view height, minimum 150px
-  const viewHeight = textarea.closest('.claudian-container')?.clientHeight ?? window.innerHeight;
+  const viewHeight = textarea.closest('.opencode-container')?.clientHeight ?? window.innerHeight;
   const maxHeight = Math.max(TEXTAREA_MIN_MAX_HEIGHT, viewHeight * TEXTAREA_MAX_HEIGHT_PERCENT);
 
   // Get flex-allocated height (what flexbox gives the textarea)
@@ -190,28 +193,28 @@ function autoResizeTextarea(textarea: HTMLTextAreaElement): void {
  */
 function buildTabDOM(contentEl: HTMLElement): TabDOMElements {
   // Messages area
-  const messagesEl = contentEl.createDiv({ cls: 'claudian-messages' });
+  const messagesEl = contentEl.createDiv({ cls: 'opencode-messages' });
 
   // Welcome message placeholder
-  const welcomeEl = messagesEl.createDiv({ cls: 'claudian-welcome' });
+  const welcomeEl = messagesEl.createDiv({ cls: 'opencode-welcome' });
 
   // Todo panel container (fixed between messages and input)
-  const todoPanelContainerEl = contentEl.createDiv({ cls: 'claudian-todo-panel-container' });
+  const todoPanelContainerEl = contentEl.createDiv({ cls: 'opencode-todo-panel-container' });
 
   // Input container
-  const inputContainerEl = contentEl.createDiv({ cls: 'claudian-input-container' });
+  const inputContainerEl = contentEl.createDiv({ cls: 'opencode-input-container' });
 
-  // Nav row (for tab badges and header icons, populated by ClaudianView)
-  const navRowEl = inputContainerEl.createDiv({ cls: 'claudian-input-nav-row' });
+  // Nav row (for tab badges and header icons, populated by OpencodeView)
+  const navRowEl = inputContainerEl.createDiv({ cls: 'opencode-input-nav-row' });
 
-  const inputWrapper = inputContainerEl.createDiv({ cls: 'claudian-input-wrapper' });
+  const inputWrapper = inputContainerEl.createDiv({ cls: 'opencode-input-wrapper' });
 
   // Context row inside input wrapper (file chips + selection indicator)
-  const contextRowEl = inputWrapper.createDiv({ cls: 'claudian-context-row' });
+  const contextRowEl = inputWrapper.createDiv({ cls: 'opencode-context-row' });
 
   // Input textarea
   const inputEl = inputWrapper.createEl('textarea', {
-    cls: 'claudian-input',
+    cls: 'opencode-input',
     attr: {
       placeholder: 'How can I help you today?',
       rows: '3',
@@ -234,9 +237,10 @@ function buildTabDOM(contentEl: HTMLElement): TabDOMElements {
 }
 
 /**
- * Initializes the tab's ClaudianService (lazy initialization).
+ * Initializes the tab's agent service (lazy initialization).
  * Call this when the tab becomes active or when the first message is sent.
  *
+ * Supports both Claude Code and OpenCode backends based on plugin settings.
  * Ensures consistent state: if initialization fails, tab.service is null
  * and tab.serviceInitialized remains false for retry.
  */
@@ -249,32 +253,66 @@ export async function initializeTabService(
     return;
   }
 
-  let service: ClaudianService | null = null;
+  let service: IAgentService | null = null;
 
   try {
-    // Create per-tab ClaudianService
-    service = new ClaudianService(plugin, mcpManager);
+    if (plugin.settings.agentBackend === 'opencode') {
+      // Create OpenCode service
+      const { OpencodeService, OpencodeServiceWrapper } = await import('../../../core/opencode');
+      const opencodeService = new OpencodeService(plugin.settings.opencodeConfig);
+      const opencodeWrapper = new OpencodeServiceWrapper(opencodeService);
+      service = opencodeWrapper;
 
-    // Load Claude Code permissions with error handling
-    try {
-      await service.loadCCPermissions();
-    } catch {
-      // Continue without permissions - service can still function
+      // Initialize the OpenCode service
+      const initialized = await opencodeWrapper.initialize();
+      if (!initialized) {
+        throw new Error('Failed to initialize OpenCode service');
+      }
+
+      // Fetch available models from OpenCode and cache them
+      try {
+        const models = await opencodeWrapper.getModels();
+        if (models.length > 0) {
+          plugin.settings.opencodeModels = models;
+          await plugin.saveSettings();
+
+          // Set default model if not set
+          if (!plugin.settings.model || !models.find(m => m.value === plugin.settings.model)) {
+            const defaultModel = models[0];
+            plugin.settings.model = defaultModel.value;
+            await plugin.saveSettings();
+          }
+        }
+      } catch (error) {
+        // Continue without models - user can retry later
+      }
+    } else {
+      // Create Claude Code service (default)
+      const { ClaudianService } = await import('../../../core/agent');
+      const claudeService = new ClaudianService(plugin, mcpManager);
+      service = claudeService as unknown as IAgentService;
+
+      // Load Claude Code permissions with error handling
+      try {
+        await claudeService.loadCCPermissions();
+      } catch {
+        // Continue without permissions - service can still function
+      }
+
+      // Pre-warm the SDK process with persistent external context paths
+      // This avoids a restart on first message when user has locked paths
+      const persistentPaths = plugin.settings.persistentExternalContextPaths;
+      claudeService.preWarm(undefined, persistentPaths).catch(() => {
+        // Pre-warm is best-effort, ignore failures
+      });
     }
-
-    // Pre-warm the SDK process with persistent external context paths
-    // This avoids a restart on first message when user has locked paths
-    const persistentPaths = plugin.settings.persistentExternalContextPaths;
-    service.preWarm(undefined, persistentPaths).catch(() => {
-      // Pre-warm is best-effort, ignore failures
-    });
 
     // Only set tab state after successful initialization
     tab.service = service;
     tab.serviceInitialized = true;
   } catch (error) {
     // Clean up partial state on failure
-    service?.closePersistentQuery('initialization failed');
+    service?.cleanup();
     tab.service = null;
     tab.serviceInitialized = false;
 
@@ -374,17 +412,30 @@ function initializeInstructionAndTodo(tab: TabData, plugin: ClaudianPlugin): voi
 function initializeInputToolbar(tab: TabData, plugin: ClaudianPlugin): void {
   const { dom } = tab;
 
-  const inputToolbar = dom.inputWrapper.createDiv({ cls: 'claudian-input-toolbar' });
-  const toolbarComponents = createInputToolbar(inputToolbar, {
+  const toolbarComponents = createInputToolbar(dom.inputWrapper, {
     getSettings: () => ({
       model: plugin.settings.model,
       thinkingBudget: plugin.settings.thinkingBudget,
       permissionMode: plugin.settings.permissionMode,
       show1MModel: plugin.settings.show1MModel,
+      agentBackend: plugin.settings.agentBackend,
+      opencodeModels: plugin.settings.opencodeModels,
+      opencodeAgents: plugin.settings.opencodeAgents,
+      currentAgent: plugin.settings.currentAgent,
     }),
     getEnvironmentVariables: () => plugin.getActiveEnvironmentVariables(),
     onModelChange: async (model: ClaudeModel) => {
       plugin.settings.model = model;
+
+      // For OpenCode, check if model supports reasoning
+      if (plugin.settings.agentBackend === 'opencode' && plugin.settings.opencodeModels) {
+        const opencodeModel = plugin.settings.opencodeModels.find(m => m.value === model);
+        if (opencodeModel && !opencodeModel.reasoning) {
+          // Model doesn't support reasoning, disable thinking
+          plugin.settings.thinkingBudget = 'off';
+        }
+      }
+
       const isDefaultModel = DEFAULT_CLAUDE_MODELS.find((m) => m.value === model);
       if (isDefaultModel) {
         plugin.settings.thinkingBudget = DEFAULT_THINKING_BUDGET[model];
@@ -405,38 +456,25 @@ function initializeInputToolbar(tab: TabData, plugin: ClaudianPlugin): void {
       plugin.settings.permissionMode = mode;
       await plugin.saveSettings();
     },
+    onAgentChange: async (agent) => {
+      plugin.settings.currentAgent = agent;
+      await plugin.saveSettings();
+      tab.ui.agentSelector?.updateDisplay();
+    },
+    onSendClick: () => {
+      // Trigger send by dispatching Enter key on input
+      dom.inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    },
   });
 
   tab.ui.modelSelector = toolbarComponents.modelSelector;
+  tab.ui.modelSelector = toolbarComponents.modelSelector;
+  tab.ui.providerModelSelector = toolbarComponents.providerModelSelector;
   tab.ui.thinkingBudgetSelector = toolbarComponents.thinkingBudgetSelector;
   tab.ui.contextUsageMeter = toolbarComponents.contextUsageMeter;
-  tab.ui.externalContextSelector = toolbarComponents.externalContextSelector;
-  tab.ui.mcpServerSelector = toolbarComponents.mcpServerSelector;
   tab.ui.permissionToggle = toolbarComponents.permissionToggle;
-
-  // Wire MCP service
-  tab.ui.mcpServerSelector.setMcpService(plugin.mcpService);
-
-  // Sync @-mentions to UI selector
-  tab.ui.fileContextManager?.setOnMcpMentionChange((servers) => {
-    tab.ui.mcpServerSelector?.addMentionedServers(servers);
-  });
-
-  // Wire external context changes
-  tab.ui.externalContextSelector.setOnChange(() => {
-    tab.ui.fileContextManager?.preScanExternalContexts();
-  });
-
-  // Initialize persistent paths
-  tab.ui.externalContextSelector.setPersistentPaths(
-    plugin.settings.persistentExternalContextPaths || []
-  );
-
-  // Wire persistence changes
-  tab.ui.externalContextSelector.setOnPersistenceChange(async (paths) => {
-    plugin.settings.persistentExternalContextPaths = paths;
-    await plugin.saveSettings();
-  });
+  tab.ui.agentSelector = toolbarComponents.agentSelector;
+  tab.ui.sendButton = toolbarComponents.sendButton;
 }
 
 /**
@@ -453,7 +491,7 @@ export function initializeTabUI(
   initializeContextManagers(tab, plugin);
 
   // Selection indicator - add to contextRowEl
-  dom.selectionIndicatorEl = dom.contextRowEl.createDiv({ cls: 'claudian-selection-indicator' });
+  dom.selectionIndicatorEl = dom.contextRowEl.createDiv({ cls: 'opencode-selection-indicator' });
   dom.selectionIndicatorEl.style.display = 'none';
 
   // Initialize slash commands
@@ -479,7 +517,7 @@ export function initializeTabUI(
  *
  * @param tab The tab data to initialize controllers for.
  * @param plugin The plugin instance.
- * @param component The Obsidian Component for registering event handlers (typically ClaudianView).
+ * @param component The Obsidian Component for registering event handlers (typically OpencodeView).
  */
 export function initializeTabControllers(
   tab: TabData,

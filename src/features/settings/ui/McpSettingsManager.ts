@@ -49,37 +49,37 @@ export class McpSettingsManager {
     this.containerEl.empty();
 
     // Header with Add dropdown
-    const headerEl = this.containerEl.createDiv({ cls: 'claudian-mcp-header' });
-    headerEl.createSpan({ text: 'MCP Servers', cls: 'claudian-mcp-label' });
+    const headerEl = this.containerEl.createDiv({ cls: 'opencode-mcp-header' });
+    headerEl.createSpan({ text: 'MCP Servers', cls: 'opencode-mcp-label' });
 
     // Add button with dropdown
-    const addContainer = headerEl.createDiv({ cls: 'claudian-mcp-add-container' });
+    const addContainer = headerEl.createDiv({ cls: 'opencode-mcp-add-container' });
     const addBtn = addContainer.createEl('button', {
-      cls: 'claudian-settings-action-btn',
+      cls: 'opencode-settings-action-btn',
       attr: { 'aria-label': 'Add' },
     });
     setIcon(addBtn, 'plus');
 
-    const dropdown = addContainer.createDiv({ cls: 'claudian-mcp-add-dropdown' });
+    const dropdown = addContainer.createDiv({ cls: 'opencode-mcp-add-dropdown' });
 
-    const stdioOption = dropdown.createDiv({ cls: 'claudian-mcp-add-option' });
-    setIcon(stdioOption.createSpan({ cls: 'claudian-mcp-add-option-icon' }), 'terminal');
+    const stdioOption = dropdown.createDiv({ cls: 'opencode-mcp-add-option' });
+    setIcon(stdioOption.createSpan({ cls: 'opencode-mcp-add-option-icon' }), 'terminal');
     stdioOption.createSpan({ text: 'stdio (local command)' });
     stdioOption.addEventListener('click', () => {
       dropdown.removeClass('is-visible');
       this.openModal(null, 'stdio');
     });
 
-    const httpOption = dropdown.createDiv({ cls: 'claudian-mcp-add-option' });
-    setIcon(httpOption.createSpan({ cls: 'claudian-mcp-add-option-icon' }), 'globe');
+    const httpOption = dropdown.createDiv({ cls: 'opencode-mcp-add-option' });
+    setIcon(httpOption.createSpan({ cls: 'opencode-mcp-add-option-icon' }), 'globe');
     httpOption.createSpan({ text: 'http / sse (remote)' });
     httpOption.addEventListener('click', () => {
       dropdown.removeClass('is-visible');
       this.openModal(null, 'http');
     });
 
-    const importOption = dropdown.createDiv({ cls: 'claudian-mcp-add-option' });
-    setIcon(importOption.createSpan({ cls: 'claudian-mcp-add-option-icon' }), 'clipboard-paste');
+    const importOption = dropdown.createDiv({ cls: 'opencode-mcp-add-option' });
+    setIcon(importOption.createSpan({ cls: 'opencode-mcp-add-option-icon' }), 'clipboard-paste');
     importOption.createSpan({ text: 'Import from clipboard' });
     importOption.addEventListener('click', () => {
       dropdown.removeClass('is-visible');
@@ -99,53 +99,53 @@ export class McpSettingsManager {
 
     // Empty state
     if (this.servers.length === 0) {
-      const emptyEl = this.containerEl.createDiv({ cls: 'claudian-mcp-empty' });
+      const emptyEl = this.containerEl.createDiv({ cls: 'opencode-mcp-empty' });
       emptyEl.setText('No MCP servers configured. Click "Add" to add one.');
       return;
     }
 
     // Server list
-    const listEl = this.containerEl.createDiv({ cls: 'claudian-mcp-list' });
+    const listEl = this.containerEl.createDiv({ cls: 'opencode-mcp-list' });
     for (const server of this.servers) {
       this.renderServerItem(listEl, server);
     }
   }
 
   private renderServerItem(listEl: HTMLElement, server: ClaudianMcpServer) {
-    const itemEl = listEl.createDiv({ cls: 'claudian-mcp-item' });
+    const itemEl = listEl.createDiv({ cls: 'opencode-mcp-item' });
     if (!server.enabled) {
-      itemEl.addClass('claudian-mcp-item-disabled');
+      itemEl.addClass('opencode-mcp-item-disabled');
     }
 
     // Status indicator (colored dot)
-    const statusEl = itemEl.createDiv({ cls: 'claudian-mcp-status' });
+    const statusEl = itemEl.createDiv({ cls: 'opencode-mcp-status' });
     statusEl.addClass(
-      server.enabled ? 'claudian-mcp-status-enabled' : 'claudian-mcp-status-disabled'
+      server.enabled ? 'opencode-mcp-status-enabled' : 'opencode-mcp-status-disabled'
     );
 
     // Info section
-    const infoEl = itemEl.createDiv({ cls: 'claudian-mcp-info' });
+    const infoEl = itemEl.createDiv({ cls: 'opencode-mcp-info' });
 
     // Name row with badges
-    const nameRow = infoEl.createDiv({ cls: 'claudian-mcp-name-row' });
+    const nameRow = infoEl.createDiv({ cls: 'opencode-mcp-name-row' });
 
-    const nameEl = nameRow.createSpan({ cls: 'claudian-mcp-name' });
+    const nameEl = nameRow.createSpan({ cls: 'opencode-mcp-name' });
     nameEl.setText(server.name);
 
     // Type badge
     const serverType = getMcpServerType(server.config);
-    const typeEl = nameRow.createSpan({ cls: 'claudian-mcp-type-badge' });
+    const typeEl = nameRow.createSpan({ cls: 'opencode-mcp-type-badge' });
     typeEl.setText(serverType);
 
     // Context-saving badge
     if (server.contextSaving) {
-      const csEl = nameRow.createSpan({ cls: 'claudian-mcp-context-saving-badge' });
+      const csEl = nameRow.createSpan({ cls: 'opencode-mcp-context-saving-badge' });
       csEl.setText('@');
       csEl.setAttribute('title', 'Context-saving: mention with @' + server.name + ' to enable');
     }
 
     // Description or command preview
-    const previewEl = infoEl.createDiv({ cls: 'claudian-mcp-preview' });
+    const previewEl = infoEl.createDiv({ cls: 'opencode-mcp-preview' });
     if (server.description) {
       previewEl.setText(server.description);
     } else {
@@ -153,11 +153,11 @@ export class McpSettingsManager {
     }
 
     // Actions
-    const actionsEl = itemEl.createDiv({ cls: 'claudian-mcp-actions' });
+    const actionsEl = itemEl.createDiv({ cls: 'opencode-mcp-actions' });
 
     // Verify button (shows tools)
     const testBtn = actionsEl.createEl('button', {
-      cls: 'claudian-mcp-action-btn',
+      cls: 'opencode-mcp-action-btn',
       attr: { 'aria-label': 'Verify (show tools)' },
     });
     setIcon(testBtn, 'zap');
@@ -165,7 +165,7 @@ export class McpSettingsManager {
 
     // Enable/disable toggle button
     const toggleBtn = actionsEl.createEl('button', {
-      cls: 'claudian-mcp-action-btn',
+      cls: 'opencode-mcp-action-btn',
       attr: { 'aria-label': server.enabled ? 'Disable' : 'Enable' },
     });
     setIcon(toggleBtn, server.enabled ? 'toggle-right' : 'toggle-left');
@@ -173,7 +173,7 @@ export class McpSettingsManager {
 
     // Edit button
     const editBtn = actionsEl.createEl('button', {
-      cls: 'claudian-mcp-action-btn',
+      cls: 'opencode-mcp-action-btn',
       attr: { 'aria-label': 'Edit' },
     });
     setIcon(editBtn, 'pencil');
@@ -181,7 +181,7 @@ export class McpSettingsManager {
 
     // Delete button
     const deleteBtn = actionsEl.createEl('button', {
-      cls: 'claudian-mcp-action-btn claudian-mcp-delete-btn',
+      cls: 'opencode-mcp-action-btn opencode-mcp-delete-btn',
       attr: { 'aria-label': 'Delete' },
     });
     setIcon(deleteBtn, 'trash-2');

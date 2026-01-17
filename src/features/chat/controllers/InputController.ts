@@ -7,6 +7,7 @@
 
 import { Notice } from 'obsidian';
 
+import type { IAgentService } from '../../../core/agent/IAgentService';
 import type { ClaudianService } from '../../../core/agent';
 import { detectBuiltInCommand, type SlashCommandManager } from '../../../core/commands';
 import { isCommandBlocked } from '../../../core/security/BlocklistChecker';
@@ -53,7 +54,7 @@ export interface InputControllerDeps {
   resetContextMeter: () => void;
   resetInputHeight: () => void;
   /** Get the agent service from the tab. */
-  getAgentService?: () => ClaudianService | null;
+  getAgentService?: () => IAgentService | null;
   /** Ensures the agent service is initialized (lazy loading). Returns true if ready. */
   ensureServiceInitialized?: () => Promise<boolean>;
 }
@@ -69,7 +70,7 @@ export class InputController {
   }
 
   /** Gets the agent service from the tab. */
-  private getAgentService(): ClaudianService | null {
+  private getAgentService(): IAgentService | null {
     return this.deps.getAgentService?.() ?? null;
   }
 
@@ -279,7 +280,7 @@ export class InputController {
     };
     state.addMessage(assistantMsg);
     const msgEl = renderer.addMessage(assistantMsg);
-    const contentEl = msgEl.querySelector('.claudian-message-content') as HTMLElement;
+    const contentEl = msgEl.querySelector('.opencode-message-content') as HTMLElement;
 
     state.toolCallElements.clear();
     state.currentContentEl = contentEl;
@@ -353,7 +354,7 @@ export class InputController {
       // Skip cleanup if stream was invalidated (tab closed or conversation switched)
       if (!wasInvalidated && state.streamGeneration === streamGeneration) {
         if (wasInterrupted) {
-          await streamController.appendText('\n\n<span class="claudian-interrupted">Interrupted</span> <span class="claudian-interrupted-hint">· What should Claudian do instead?</span>');
+          await streamController.appendText('\n\n<span class="opencode-interrupted">Interrupted</span> <span class="opencode-interrupted-hint">· What should Claudian do instead?</span>');
         }
         streamController.hideThinkingIndicator();
         state.isStreaming = false;

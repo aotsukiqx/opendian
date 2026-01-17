@@ -2,14 +2,14 @@
  * Migration Constants - Shared constants for storage migration.
  *
  * Single source of truth for fields that need to be migrated
- * from settings.json to claudian-settings.json.
+ * from settings.json to opencode-settings.json.
  */
 
 /**
- * Fields that are Claudian-specific and should NOT be in CC settings.json.
- * These are migrated to claudian-settings.json and stripped from settings.json.
+ * Fields that are OpenCode-specific and should NOT be in CC settings.json.
+ * These are migrated to opencode-settings.json and stripped from settings.json.
  *
- * IMPORTANT: Keep this list updated when adding new Claudian settings!
+ * IMPORTANT: Keep this list updated when adding new OpenCode settings!
  */
 export const CLAUDIAN_ONLY_FIELDS = new Set([
   // User preferences
@@ -34,7 +34,7 @@ export const CLAUDIAN_ONLY_FIELDS = new Set([
   'allowedExportPaths',
   'persistentExternalContextPaths',
 
-  // Environment (Claudian uses string format + snippets)
+  // Environment (OpenCode uses string format + snippets)
   'environmentVariables',
   'envSnippets',
 
@@ -51,12 +51,12 @@ export const CLAUDIAN_ONLY_FIELDS = new Set([
   'showToolUse',
   'toolCallExpandedByDefault',
 
-  // Claude Code plugins
+  // Plugins
   'enabledPlugins',
 ]);
 
 /**
- * Fields that are Claudian-specific and should be migrated.
+ * Fields that are OpenCode-specific and should be migrated.
  * Excludes deprecated fields which are just removed.
  */
 export const MIGRATABLE_CLAUDIAN_FIELDS = new Set([
@@ -94,7 +94,7 @@ export const DEPRECATED_FIELDS = new Set([
 ]);
 
 /**
- * Convert CC env object format to Claudian environmentVariables string format.
+ * Convert CC env object format to OpenCode environmentVariables string format.
  *
  * @example
  * { ANTHROPIC_API_KEY: "xxx", MY_VAR: "value" }

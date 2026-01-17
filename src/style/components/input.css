@@ -1,12 +1,12 @@
 /* Input area */
-.claudian-input-container {
+.opencode-input-container {
   position: relative;
   padding: 12px 0 0 0;
 }
 
 /* Input wrapper (border container) - flex column so textarea expands when no chips */
 /* Height calculation: context row (36px) + textarea min (60px) + toolbar (38px) + border (2px) = 136px */
-.claudian-input-wrapper {
+.opencode-input-wrapper {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -18,7 +18,7 @@
 
 /* Context row (file chip left, selection indicator right) - inside input wrapper at top */
 /* Collapsed by default; expanded via .has-content class; textarea fills remaining space */
-.claudian-context-row {
+.opencode-context-row {
   display: none;
   align-items: flex-start;
   justify-content: space-between;
@@ -28,12 +28,12 @@
 }
 
 /* Show context row when it has visible content */
-.claudian-context-row.has-content {
+.opencode-context-row.has-content {
   display: flex;
 }
 
 /* Nav row (tab badges left, header icons right) - above input wrapper */
-.claudian-input-nav-row {
+.opencode-input-nav-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -44,7 +44,7 @@
 /* Selection indicator (shown when text is selected in editor) */
 /* Match file chip height (24px): chip has 16px remove button + 6px padding + 2px border */
 /* Indicator: 12px text + 10px padding (5+5) + 2px border = 24px */
-.claudian-selection-indicator {
+.opencode-selection-indicator {
   color: #7abaff;
   font-size: 12px;
   line-height: 1;
@@ -58,7 +58,7 @@
   flex-shrink: 0;
 }
 
-.claudian-input {
+.opencode-input {
   width: 100%;
   flex: 1 1 0;
   min-height: 60px;
@@ -76,35 +76,76 @@
   overflow-y: auto;
 }
 
-.claudian-input:hover,
-.claudian-input:focus {
+.opencode-input:hover,
+.opencode-input:focus {
   outline: none !important;
   border: none !important;
   background: transparent !important;
   box-shadow: none !important;
 }
 
-.claudian-input::placeholder {
+.opencode-input::placeholder {
   color: var(--text-muted);
 }
 
-/* Input toolbar */
-.claudian-input-toolbar {
+/* Input toolbar container */
+.opencode-input-toolbar {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
   flex-shrink: 0;
   padding: 4px 6px 6px 6px;
+  gap: 4px;
+}
+
+/* Claude Code mode: two-column layout */
+.opencode-input-toolbar.claude-code-mode {
+  justify-content: space-between;
+}
+
+.opencode-input-toolbar.claude-code-mode .opencode-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.opencode-input-toolbar.claude-code-mode .opencode-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* OpenCode mode: single row layout */
+.opencode-input-toolbar.opencode-mode {
+  justify-content: space-between;
+}
+
+.opencode-input-toolbar.opencode-mode .opencode-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.opencode-input-toolbar.opencode-mode .opencode-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Toolbar sections */
+.opencode-toolbar-left,
+.opencode-toolbar-right {
+  display: contents;
 }
 
 /* File indicator (attached files) */
-.claudian-file-indicator {
+.opencode-file-indicator {
   display: none;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.claudian-file-chip {
+.opencode-file-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -118,26 +159,26 @@
   cursor: pointer;
 }
 
-.claudian-file-chip-icon {
+.opencode-file-chip-icon {
   display: flex;
   align-items: center;
   color: var(--text-muted);
   flex-shrink: 0;
 }
 
-.claudian-file-chip-icon svg {
+.opencode-file-chip-icon svg {
   width: 12px;
   height: 12px;
 }
 
-.claudian-file-chip-name {
+.opencode-file-chip-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--text-normal);
 }
 
-.claudian-file-chip-remove {
+.opencode-file-chip-remove {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -151,17 +192,17 @@
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.claudian-file-chip-remove:hover {
+.opencode-file-chip-remove:hover {
   background: var(--background-modifier-hover);
   color: var(--text-normal);
 }
 
-.claudian-file-chip:hover {
+.opencode-file-chip:hover {
   background: var(--background-modifier-hover);
 }
 
 /* Message Queue Indicator (shown below flavor text in thinking indicator) */
-.claudian-queue-indicator {
+.opencode-queue-indicator {
   display: none;
   font-size: 12px;
   color: var(--text-muted);
@@ -173,7 +214,7 @@
 }
 
 /* Light blue border when instruction mode is active */
-.claudian-input-instruction-mode {
+.opencode-input-instruction-mode {
   border-color: #60a5fa !important;
   box-shadow: 0 0 0 1px #60a5fa;
 }

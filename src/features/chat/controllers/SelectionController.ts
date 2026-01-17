@@ -158,8 +158,8 @@ export class SelectionController {
   updateContextRowVisibility(): void {
     if (!this.contextRowEl) return;
     const hasSelection = this.storedSelection !== null;
-    const fileIndicator = this.contextRowEl.querySelector('.claudian-file-indicator') as HTMLElement | null;
-    const imagePreview = this.contextRowEl.querySelector('.claudian-image-preview') as HTMLElement | null;
+    const fileIndicator = this.contextRowEl.querySelector('.opencode-file-indicator') as HTMLElement | null;
+    const imagePreview = this.contextRowEl.querySelector('.opencode-image-preview') as HTMLElement | null;
     const hasFileChips = fileIndicator?.style.display === 'flex';
     const hasImageChips = imagePreview?.style.display === 'flex';
     this.contextRowEl.classList.toggle('has-content', hasSelection || hasFileChips || hasImageChips);

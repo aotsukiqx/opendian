@@ -251,7 +251,7 @@ async function testStdioServer(server: ClaudianMcpServer): Promise<McpTestResult
         params: {
           protocolVersion: '2024-11-05',
           capabilities: {},
-          clientInfo: { name: 'claudian-tester', version: '1.0.0' },
+          clientInfo: { name: 'opencode-tester', version: '1.0.0' },
         },
       };
 
@@ -337,7 +337,7 @@ async function testHttpServer(server: ClaudianMcpServer): Promise<McpTestResult>
           params: {
             protocolVersion: '2024-11-05',
             capabilities: {},
-            clientInfo: { name: 'claudian-tester', version: '1.0.0' },
+            clientInfo: { name: 'opencode-tester', version: '1.0.0' },
           },
         });
 
@@ -523,7 +523,7 @@ async function testSseServer(server: ClaudianMcpServer): Promise<McpTestResult> 
       params: {
         protocolVersion: '2024-11-05',
         capabilities: {},
-        clientInfo: { name: 'claudian-tester', version: '1.0.0' },
+        clientInfo: { name: 'opencode-tester', version: '1.0.0' },
       },
     };
 

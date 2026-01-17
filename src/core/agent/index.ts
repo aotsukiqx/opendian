@@ -1,7 +1,7 @@
 /**
  * Agent module barrel export.
  *
- * Provides the Claude Agent SDK wrapper and supporting infrastructure.
+ * Provides the Claude Agent SDK wrapper, OpenCode SDK wrapper, and unified interface.
  */
 
 export { type ApprovalCallback, ClaudianService, type QueryOptions } from './ClaudianService';
@@ -20,3 +20,4 @@ export type {
   SDKContentBlock,
   SessionState,
 } from './types';
+export * from './IAgentService';

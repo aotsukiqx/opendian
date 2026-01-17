@@ -36,7 +36,7 @@ export class SlashCommandModal extends Modal {
 
   onOpen() {
     this.setTitle(this.existingCmd ? 'Edit Slash Command' : 'Add Slash Command');
-    this.modalEl.addClass('claudian-slash-modal');
+    this.modalEl.addClass('opencode-slash-modal');
 
     const { contentEl } = this;
 
@@ -93,7 +93,7 @@ export class SlashCommandModal extends Modal {
       .setDesc('Use $ARGUMENTS, $1, $2, @file, !`bash`');
 
     const contentArea = contentEl.createEl('textarea', {
-      cls: 'claudian-slash-content-area',
+      cls: 'opencode-slash-content-area',
       attr: {
         rows: '10',
         placeholder: 'Review this code for:\n$ARGUMENTS\n\n@$1',
@@ -105,17 +105,17 @@ export class SlashCommandModal extends Modal {
     contentArea.value = initialContent;
 
     // Button container
-    const buttonContainer = contentEl.createDiv({ cls: 'claudian-slash-modal-buttons' });
+    const buttonContainer = contentEl.createDiv({ cls: 'opencode-slash-modal-buttons' });
 
     const cancelBtn = buttonContainer.createEl('button', {
       text: 'Cancel',
-      cls: 'claudian-cancel-btn',
+      cls: 'opencode-cancel-btn',
     });
     cancelBtn.addEventListener('click', () => this.close());
 
     const saveBtn = buttonContainer.createEl('button', {
       text: 'Save',
-      cls: 'claudian-save-btn',
+      cls: 'opencode-save-btn',
     });
     saveBtn.addEventListener('click', async () => {
       const name = nameInput.value.trim();
@@ -197,27 +197,27 @@ export class SlashCommandSettings {
     this.containerEl.empty();
 
     // Header with add button
-    const headerEl = this.containerEl.createDiv({ cls: 'claudian-slash-header' });
-    headerEl.createSpan({ text: 'Slash Commands', cls: 'claudian-slash-label' });
+    const headerEl = this.containerEl.createDiv({ cls: 'opencode-slash-header' });
+    headerEl.createSpan({ text: 'Slash Commands', cls: 'opencode-slash-label' });
 
-    const actionsEl = headerEl.createDiv({ cls: 'claudian-slash-header-actions' });
+    const actionsEl = headerEl.createDiv({ cls: 'opencode-slash-header-actions' });
 
     const importBtn = actionsEl.createEl('button', {
-      cls: 'claudian-settings-action-btn',
+      cls: 'opencode-settings-action-btn',
       attr: { 'aria-label': 'Import' },
     });
     setIcon(importBtn, 'download');
     importBtn.addEventListener('click', () => this.importCommands());
 
     const exportBtn = actionsEl.createEl('button', {
-      cls: 'claudian-settings-action-btn',
+      cls: 'opencode-settings-action-btn',
       attr: { 'aria-label': 'Export' },
     });
     setIcon(exportBtn, 'upload');
     exportBtn.addEventListener('click', () => this.exportCommands());
 
     const addBtn = actionsEl.createEl('button', {
-      cls: 'claudian-settings-action-btn',
+      cls: 'opencode-settings-action-btn',
       attr: { 'aria-label': 'Add' },
     });
     setIcon(addBtn, 'plus');
@@ -227,12 +227,12 @@ export class SlashCommandSettings {
     const commands = this.plugin.settings.slashCommands.filter(isUserCommand);
 
     if (commands.length === 0) {
-      const emptyEl = this.containerEl.createDiv({ cls: 'claudian-slash-empty-state' });
+      const emptyEl = this.containerEl.createDiv({ cls: 'opencode-slash-empty-state' });
       emptyEl.setText('No slash commands configured. Click "Add" to create one.');
       return;
     }
 
-    const listEl = this.containerEl.createDiv({ cls: 'claudian-slash-list' });
+    const listEl = this.containerEl.createDiv({ cls: 'opencode-slash-list' });
 
     for (const cmd of commands) {
       this.renderCommandItem(listEl, cmd);
@@ -240,36 +240,36 @@ export class SlashCommandSettings {
   }
 
   private renderCommandItem(listEl: HTMLElement, cmd: SlashCommand): void {
-    const itemEl = listEl.createDiv({ cls: 'claudian-slash-item-settings' });
+    const itemEl = listEl.createDiv({ cls: 'opencode-slash-item-settings' });
 
-    const infoEl = itemEl.createDiv({ cls: 'claudian-slash-info' });
+    const infoEl = itemEl.createDiv({ cls: 'opencode-slash-info' });
 
-    const headerRow = infoEl.createDiv({ cls: 'claudian-slash-item-header' });
+    const headerRow = infoEl.createDiv({ cls: 'opencode-slash-item-header' });
 
-    const nameEl = headerRow.createSpan({ cls: 'claudian-slash-item-name' });
+    const nameEl = headerRow.createSpan({ cls: 'opencode-slash-item-name' });
     nameEl.setText(`/${cmd.name}`);
 
     if (cmd.argumentHint) {
-      const hintEl = headerRow.createSpan({ cls: 'claudian-slash-item-hint' });
+      const hintEl = headerRow.createSpan({ cls: 'opencode-slash-item-hint' });
       hintEl.setText(cmd.argumentHint);
     }
 
     if (cmd.description) {
-      const descEl = infoEl.createDiv({ cls: 'claudian-slash-item-desc' });
+      const descEl = infoEl.createDiv({ cls: 'opencode-slash-item-desc' });
       descEl.setText(cmd.description);
     }
 
-    const actionsEl = itemEl.createDiv({ cls: 'claudian-slash-item-actions' });
+    const actionsEl = itemEl.createDiv({ cls: 'opencode-slash-item-actions' });
 
     const editBtn = actionsEl.createEl('button', {
-      cls: 'claudian-settings-action-btn',
+      cls: 'opencode-settings-action-btn',
       attr: { 'aria-label': 'Edit' },
     });
     setIcon(editBtn, 'pencil');
     editBtn.addEventListener('click', () => this.openCommandModal(cmd));
 
     const deleteBtn = actionsEl.createEl('button', {
-      cls: 'claudian-settings-action-btn claudian-settings-delete-btn',
+      cls: 'opencode-settings-action-btn opencode-settings-delete-btn',
       attr: { 'aria-label': 'Delete' },
     });
     setIcon(deleteBtn, 'trash-2');
@@ -340,7 +340,7 @@ export class SlashCommandSettings {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'claudian-slash-commands.json';
+    a.download = 'opencode-slash-commands.json';
     a.click();
     URL.revokeObjectURL(url);
     new Notice(`Exported ${commands.length} slash command(s)`);

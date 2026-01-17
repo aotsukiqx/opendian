@@ -24,6 +24,7 @@
 @import "./toolbar/permission-toggle.css";
 @import "./toolbar/external-context.css";
 @import "./toolbar/mcp-selector.css";
+@import "./toolbar/image-upload.css";
 
 /* Features */
 @import "./features/file-context.css";

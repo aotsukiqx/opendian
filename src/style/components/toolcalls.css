@@ -1,10 +1,10 @@
 /* Tool call container - transparent, no border */
-.claudian-tool-call {
+.opencode-tool-call {
   margin: 8px 0;
 }
 
 /* Tool call header - transparent */
-.claudian-tool-header {
+.opencode-tool-header {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -13,19 +13,19 @@
   overflow: hidden;
 }
 
-.claudian-tool-icon {
+.opencode-tool-icon {
   display: flex;
   align-items: center;
   color: var(--text-accent);
   flex-shrink: 0;
 }
 
-.claudian-tool-icon svg {
+.opencode-tool-icon svg {
   width: 16px;
   height: 16px;
 }
 
-.claudian-tool-label {
+.opencode-tool-label {
   flex: 1;
   font-family: var(--font-monospace);
   font-size: 13px;
@@ -36,35 +36,35 @@
   text-overflow: ellipsis;
 }
 
-.claudian-tool-status {
+.opencode-tool-status {
   display: flex;
   align-items: center;
   flex-shrink: 0;
 }
 
-.claudian-tool-status svg {
+.opencode-tool-status svg {
   width: 14px;
   height: 14px;
 }
 
-.claudian-tool-status.status-running {
+.opencode-tool-status.status-running {
   color: var(--text-accent);
 }
 
-.claudian-tool-status.status-completed {
+.opencode-tool-status.status-completed {
   color: var(--color-green);
 }
 
-.claudian-tool-status.status-error {
+.opencode-tool-status.status-error {
   color: var(--color-red);
 }
 
-.claudian-tool-status.status-blocked {
+.opencode-tool-status.status-blocked {
   color: var(--color-orange);
 }
 
 /* Spinner animation */
-.claudian-spinner {
+.opencode-spinner {
   width: 14px;
   height: 14px;
   border: 2px solid var(--background-modifier-border);
@@ -74,25 +74,25 @@
 }
 
 /* Tool call content - tree-branch style */
-.claudian-tool-content {
+.opencode-tool-content {
   padding: 4px 0 4px 24px;
 }
 
 /* Tree-branch result row */
-.claudian-tool-result-row {
+.opencode-tool-result-row {
   display: flex;
   align-items: flex-start;
   gap: 4px;
 }
 
-.claudian-tool-branch {
+.opencode-tool-branch {
   font-family: monospace;
   color: var(--text-faint);
   flex-shrink: 0;
   line-height: 1.4;
 }
 
-.claudian-tool-result-text {
+.opencode-tool-result-text {
   font-family: var(--font-monospace);
   font-size: 12px;
   color: var(--text-muted);
@@ -103,23 +103,23 @@
 }
 
 /* Result items - regular text lines */
-.claudian-tool-result-item {
+.opencode-tool-result-item {
   display: block;
   margin-bottom: 2px;
 }
 
-.claudian-tool-result-item:last-child {
+.opencode-tool-result-item:last-child {
   margin-bottom: 0;
 }
 
 /* Bulleted items (WebSearch) - hanging indent for wrapped lines */
-.claudian-tool-result-bullet {
+.opencode-tool-result-bullet {
   display: block;
   padding-left: 0.8em;
   text-indent: -0.8em;
   margin-bottom: 2px;
 }
 
-.claudian-tool-result-bullet:last-child {
+.opencode-tool-result-bullet:last-child {
   margin-bottom: 0;
 }

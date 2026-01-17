@@ -44,6 +44,15 @@ export class TitleGenerationService {
     assistantResponse: string,
     callback: TitleGenerationCallback
   ): Promise<void> {
+    // Skip title generation when using OpenCode backend (requires Claude CLI)
+    if (this.plugin.settings.agentBackend === 'opencode') {
+      await this.safeCallback(callback, conversationId, {
+        success: false,
+        error: 'Title generation requires Claude Code backend',
+      });
+      return;
+    }
+
     const vaultPath = getVaultPath(this.plugin.app);
     if (!vaultPath) {
       await this.safeCallback(callback, conversationId, {

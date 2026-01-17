@@ -61,35 +61,35 @@ export function createSubagentBlock(
     isExpanded: false, // Collapsed by default
   };
 
-  const wrapperEl = parentEl.createDiv({ cls: 'claudian-subagent-list' });
+  const wrapperEl = parentEl.createDiv({ cls: 'opencode-subagent-list' });
   wrapperEl.dataset.subagentId = taskToolId;
 
   // Header (clickable to collapse/expand)
-  const headerEl = wrapperEl.createDiv({ cls: 'claudian-subagent-header' });
+  const headerEl = wrapperEl.createDiv({ cls: 'opencode-subagent-header' });
   headerEl.setAttribute('tabindex', '0');
   headerEl.setAttribute('role', 'button');
   headerEl.setAttribute('aria-expanded', 'false');
   headerEl.setAttribute('aria-label', `Subagent task: ${truncateDescription(description)} - click to expand`);
 
   // Robot icon (decorative)
-  const iconEl = headerEl.createDiv({ cls: 'claudian-subagent-icon' });
+  const iconEl = headerEl.createDiv({ cls: 'opencode-subagent-icon' });
   iconEl.setAttribute('aria-hidden', 'true');
-  setIcon(iconEl, 'bot');
+  setIcon(iconEl, 'workflow');
 
   // Label (description only)
-  const labelEl = headerEl.createDiv({ cls: 'claudian-subagent-label' });
+  const labelEl = headerEl.createDiv({ cls: 'opencode-subagent-label' });
   labelEl.setText(truncateDescription(description));
 
   // Tool count badge
-  const countEl = headerEl.createDiv({ cls: 'claudian-subagent-count' });
+  const countEl = headerEl.createDiv({ cls: 'opencode-subagent-count' });
   countEl.setText('0 tool uses');
 
   // Status indicator (icon updated on completion/error; empty while running)
-  const statusEl = headerEl.createDiv({ cls: 'claudian-subagent-status status-running' });
+  const statusEl = headerEl.createDiv({ cls: 'opencode-subagent-status status-running' });
   statusEl.setAttribute('aria-label', 'Status: running');
 
   // Content (collapsed by default)
-  const contentEl = wrapperEl.createDiv({ cls: 'claudian-subagent-content' });
+  const contentEl = wrapperEl.createDiv({ cls: 'opencode-subagent-content' });
 
   // Setup collapsible behavior - use info as state (it has isExpanded property)
   setupCollapsible(wrapperEl, headerEl, contentEl, info);
@@ -124,20 +124,20 @@ export function addSubagentToolCall(
 
   // Render current tool item with tree branch
   const itemEl = state.contentEl.createDiv({
-    cls: `claudian-subagent-tool-item claudian-subagent-tool-${toolCall.status}`
+    cls: `opencode-subagent-tool-item opencode-subagent-tool-${toolCall.status}`
   });
   itemEl.dataset.toolId = toolCall.id;
   state.currentToolEl = itemEl;
 
   // Tool row (branch + label)
-  const toolRowEl = itemEl.createDiv({ cls: 'claudian-subagent-tool-row' });
+  const toolRowEl = itemEl.createDiv({ cls: 'opencode-subagent-tool-row' });
 
   // Tree branch indicator
-  const branchEl = toolRowEl.createDiv({ cls: 'claudian-subagent-branch' });
+  const branchEl = toolRowEl.createDiv({ cls: 'opencode-subagent-branch' });
   branchEl.setText('└─');
 
   // Tool label
-  const labelEl = toolRowEl.createDiv({ cls: 'claudian-subagent-tool-text' });
+  const labelEl = toolRowEl.createDiv({ cls: 'opencode-subagent-tool-text' });
   labelEl.setText(getToolLabel(toolCall.name, toolCall.input));
 }
 
@@ -156,20 +156,20 @@ export function updateSubagentToolResult(
   // Update current tool element if it matches
   if (state.currentToolEl && state.currentToolEl.dataset.toolId === toolId) {
     // Update class for styling (no status icon change)
-    state.currentToolEl.className = `claudian-subagent-tool-item claudian-subagent-tool-${toolCall.status}`;
+    state.currentToolEl.className = `opencode-subagent-tool-item opencode-subagent-tool-${toolCall.status}`;
 
     // Add or update result area nested under tool (max 2 lines)
     if (toolCall.result) {
       if (!state.currentResultEl) {
         // Create result row nested inside tool item
-        state.currentResultEl = state.currentToolEl.createDiv({ cls: 'claudian-subagent-tool-result' });
+        state.currentResultEl = state.currentToolEl.createDiv({ cls: 'opencode-subagent-tool-result' });
         // Add tree branch for result (indented)
-        const branchEl = state.currentResultEl.createDiv({ cls: 'claudian-subagent-branch' });
+        const branchEl = state.currentResultEl.createDiv({ cls: 'opencode-subagent-branch' });
         branchEl.setText('└─');
-        const textEl = state.currentResultEl.createDiv({ cls: 'claudian-subagent-result-text' });
+        const textEl = state.currentResultEl.createDiv({ cls: 'opencode-subagent-result-text' });
         textEl.setText(truncateResult(toolCall.result));
       } else {
-        const textEl = state.currentResultEl.querySelector('.claudian-subagent-result-text');
+        const textEl = state.currentResultEl.querySelector('.opencode-subagent-result-text');
         if (textEl) {
           textEl.setText(truncateResult(toolCall.result));
         }
@@ -196,7 +196,7 @@ export function finalizeSubagentBlock(
   state.countEl.setText(`${toolCount} tool uses`);
 
   // Update status indicator
-  state.statusEl.className = 'claudian-subagent-status';
+  state.statusEl.className = 'opencode-subagent-status';
   state.statusEl.addClass(`status-${state.info.status}`);
   state.statusEl.empty();
   if (state.info.status === 'completed') {
@@ -217,10 +217,10 @@ export function finalizeSubagentBlock(
   state.currentToolEl = null;
   state.currentResultEl = null;
 
-  const doneEl = state.contentEl.createDiv({ cls: 'claudian-subagent-done' });
-  const branchEl = doneEl.createDiv({ cls: 'claudian-subagent-branch' });
+  const doneEl = state.contentEl.createDiv({ cls: 'opencode-subagent-done' });
+  const branchEl = doneEl.createDiv({ cls: 'opencode-subagent-branch' });
   branchEl.setText('└─');
-  const textEl = doneEl.createDiv({ cls: 'claudian-subagent-done-text' });
+  const textEl = doneEl.createDiv({ cls: 'opencode-subagent-done-text' });
   textEl.setText(isError ? 'ERROR' : 'DONE');
 }
 
@@ -229,7 +229,7 @@ export function renderStoredSubagent(
   parentEl: HTMLElement,
   subagent: SubagentInfo
 ): HTMLElement {
-  const wrapperEl = parentEl.createDiv({ cls: 'claudian-subagent-list' });
+  const wrapperEl = parentEl.createDiv({ cls: 'opencode-subagent-list' });
   if (subagent.status === 'completed') {
     wrapperEl.addClass('done');
   } else if (subagent.status === 'error') {
@@ -241,64 +241,64 @@ export function renderStoredSubagent(
   const toolCount = subagent.toolCalls.length;
 
   // Header
-  const headerEl = wrapperEl.createDiv({ cls: 'claudian-subagent-header' });
+  const headerEl = wrapperEl.createDiv({ cls: 'opencode-subagent-header' });
   headerEl.setAttribute('tabindex', '0');
   headerEl.setAttribute('role', 'button');
   headerEl.setAttribute('aria-label', `Subagent task: ${truncateDescription(subagent.description)} - ${toolCount} tool uses - Status: ${subagent.status}`);
 
-  const iconEl = headerEl.createDiv({ cls: 'claudian-subagent-icon' });
+  const iconEl = headerEl.createDiv({ cls: 'opencode-subagent-icon' });
   iconEl.setAttribute('aria-hidden', 'true');
-  setIcon(iconEl, 'bot');
+  setIcon(iconEl, 'workflow');
 
-  const labelEl = headerEl.createDiv({ cls: 'claudian-subagent-label' });
+  const labelEl = headerEl.createDiv({ cls: 'opencode-subagent-label' });
   labelEl.setText(truncateDescription(subagent.description));
 
   // Tool count badge
-  const countEl = headerEl.createDiv({ cls: 'claudian-subagent-count' });
+  const countEl = headerEl.createDiv({ cls: 'opencode-subagent-count' });
   countEl.setText(`${toolCount} tool uses`);
 
   // Status indicator
-  const statusEl = headerEl.createDiv({ cls: `claudian-subagent-status status-${subagent.status}` });
+  const statusEl = headerEl.createDiv({ cls: `opencode-subagent-status status-${subagent.status}` });
   statusEl.setAttribute('aria-label', `Status: ${subagent.status}`);
   if (subagent.status === 'completed') {
     setIcon(statusEl, 'check');
   } else if (subagent.status === 'error') {
     setIcon(statusEl, 'x');
   } else {
-    statusEl.createSpan({ cls: 'claudian-spinner' });
+    statusEl.createSpan({ cls: 'opencode-spinner' });
   }
 
   // Content
-  const contentEl = wrapperEl.createDiv({ cls: 'claudian-subagent-content' });
+  const contentEl = wrapperEl.createDiv({ cls: 'opencode-subagent-content' });
 
   // Show "DONE" or "ERROR" for completed subagents
   if (subagent.status === 'completed' || subagent.status === 'error') {
-    const doneEl = contentEl.createDiv({ cls: 'claudian-subagent-done' });
-    const branchEl = doneEl.createDiv({ cls: 'claudian-subagent-branch' });
+    const doneEl = contentEl.createDiv({ cls: 'opencode-subagent-done' });
+    const branchEl = doneEl.createDiv({ cls: 'opencode-subagent-branch' });
     branchEl.setText('└─');
-    const textEl = doneEl.createDiv({ cls: 'claudian-subagent-done-text' });
+    const textEl = doneEl.createDiv({ cls: 'opencode-subagent-done-text' });
     textEl.setText(subagent.status === 'error' ? 'ERROR' : 'DONE');
   } else {
     // For running subagents, show the last tool call
     const lastTool = subagent.toolCalls[subagent.toolCalls.length - 1];
     if (lastTool) {
       const itemEl = contentEl.createDiv({
-        cls: `claudian-subagent-tool-item claudian-subagent-tool-${lastTool.status}`
+        cls: `opencode-subagent-tool-item opencode-subagent-tool-${lastTool.status}`
       });
 
       // Tool row (branch + label)
-      const toolRowEl = itemEl.createDiv({ cls: 'claudian-subagent-tool-row' });
-      const branchEl = toolRowEl.createDiv({ cls: 'claudian-subagent-branch' });
+      const toolRowEl = itemEl.createDiv({ cls: 'opencode-subagent-tool-row' });
+      const branchEl = toolRowEl.createDiv({ cls: 'opencode-subagent-branch' });
       branchEl.setText('└─');
-      const toolLabelEl = toolRowEl.createDiv({ cls: 'claudian-subagent-tool-text' });
+      const toolLabelEl = toolRowEl.createDiv({ cls: 'opencode-subagent-tool-text' });
       toolLabelEl.setText(getToolLabel(lastTool.name, lastTool.input));
 
       // Show result if available (nested under tool)
       if (lastTool.result) {
-        const resultEl = itemEl.createDiv({ cls: 'claudian-subagent-tool-result' });
-        const resultBranchEl = resultEl.createDiv({ cls: 'claudian-subagent-branch' });
+        const resultEl = itemEl.createDiv({ cls: 'opencode-subagent-tool-result' });
+        const resultBranchEl = resultEl.createDiv({ cls: 'opencode-subagent-branch' });
         resultBranchEl.setText('└─');
-        const textEl = resultEl.createDiv({ cls: 'claudian-subagent-result-text' });
+        const textEl = resultEl.createDiv({ cls: 'opencode-subagent-result-text' });
         textEl.setText(truncateResult(lastTool.result));
       }
     }
@@ -368,42 +368,42 @@ export function createAsyncSubagentBlock(
     asyncStatus: 'pending',
   };
 
-  const wrapperEl = parentEl.createDiv({ cls: 'claudian-subagent-list' });
+  const wrapperEl = parentEl.createDiv({ cls: 'opencode-subagent-list' });
   setAsyncWrapperStatus(wrapperEl, 'pending');
   wrapperEl.dataset.asyncSubagentId = taskToolId;
 
   // Header
-  const headerEl = wrapperEl.createDiv({ cls: 'claudian-subagent-header' });
+  const headerEl = wrapperEl.createDiv({ cls: 'opencode-subagent-header' });
   headerEl.setAttribute('tabindex', '0');
   headerEl.setAttribute('role', 'button');
   headerEl.setAttribute('aria-expanded', 'false');
   headerEl.setAttribute('aria-label', `Background task: ${description} - Status: running`);
 
   // Robot icon (decorative)
-  const iconEl = headerEl.createDiv({ cls: 'claudian-subagent-icon' });
+  const iconEl = headerEl.createDiv({ cls: 'opencode-subagent-icon' });
   iconEl.setAttribute('aria-hidden', 'true');
-  setIcon(iconEl, 'bot');
+  setIcon(iconEl, 'workflow');
 
   // Label (description) - show immediately for visibility
-  const labelEl = headerEl.createDiv({ cls: 'claudian-subagent-label' });
+  const labelEl = headerEl.createDiv({ cls: 'opencode-subagent-label' });
   labelEl.setText(truncateDescription(description));
 
   // Status text (instead of tool count)
-  const statusTextEl = headerEl.createDiv({ cls: 'claudian-subagent-status-text' });
+  const statusTextEl = headerEl.createDiv({ cls: 'opencode-subagent-status-text' });
   statusTextEl.setText('Running');
 
   // Status indicator (spinner initially)
-  const statusEl = headerEl.createDiv({ cls: 'claudian-subagent-status status-running' });
+  const statusEl = headerEl.createDiv({ cls: 'opencode-subagent-status status-running' });
   statusEl.setAttribute('aria-label', 'Status: running');
 
   // Content (collapsed by default)
-  const contentEl = wrapperEl.createDiv({ cls: 'claudian-subagent-content' });
+  const contentEl = wrapperEl.createDiv({ cls: 'opencode-subagent-content' });
 
   // Initial content
-  const statusRow = contentEl.createDiv({ cls: 'claudian-subagent-done' });
-  const branchEl = statusRow.createDiv({ cls: 'claudian-subagent-branch' });
+  const statusRow = contentEl.createDiv({ cls: 'opencode-subagent-done' });
+  const branchEl = statusRow.createDiv({ cls: 'opencode-subagent-branch' });
   branchEl.setText('└─');
-  const textEl = statusRow.createDiv({ cls: 'claudian-subagent-done-text' });
+  const textEl = statusRow.createDiv({ cls: 'opencode-subagent-done-text' });
   textEl.setText('run in background');
 
   // Setup collapsible behavior - use info as state (it has isExpanded property)
@@ -436,10 +436,10 @@ export function updateAsyncSubagentRunning(
 
   // Update content
   state.contentEl.empty();
-  const statusRow = state.contentEl.createDiv({ cls: 'claudian-subagent-done' });
-  const branchEl = statusRow.createDiv({ cls: 'claudian-subagent-branch' });
+  const statusRow = state.contentEl.createDiv({ cls: 'opencode-subagent-done' });
+  const branchEl = statusRow.createDiv({ cls: 'opencode-subagent-branch' });
   branchEl.setText('└─');
-  const textEl = statusRow.createDiv({ cls: 'claudian-subagent-done-text claudian-async-agent-id' });
+  const textEl = statusRow.createDiv({ cls: 'opencode-subagent-done-text opencode-async-agent-id' });
   const shortId = agentId.length > 12 ? agentId.substring(0, 12) + '...' : agentId;
   textEl.setText(`run in background (${shortId})`);
 }
@@ -461,7 +461,7 @@ export function finalizeAsyncSubagent(
   state.statusTextEl.setText(isError ? 'Error' : 'Completed');
 
   // Update status indicator
-  state.statusEl.className = 'claudian-subagent-status';
+  state.statusEl.className = 'opencode-subagent-status';
   state.statusEl.addClass(`status-${isError ? 'error' : 'completed'}`);
   state.statusEl.empty();
   if (isError) {
@@ -479,10 +479,10 @@ export function finalizeAsyncSubagent(
 
   // Show result in content
   state.contentEl.empty();
-  const resultEl = state.contentEl.createDiv({ cls: 'claudian-subagent-done' });
-  const branchEl = resultEl.createDiv({ cls: 'claudian-subagent-branch' });
+  const resultEl = state.contentEl.createDiv({ cls: 'opencode-subagent-done' });
+  const branchEl = resultEl.createDiv({ cls: 'opencode-subagent-branch' });
   branchEl.setText('└─');
-  const textEl = resultEl.createDiv({ cls: 'claudian-subagent-done-text' });
+  const textEl = resultEl.createDiv({ cls: 'opencode-subagent-done-text' });
 
   if (isError && result) {
     // Show truncated error message for debugging
@@ -506,7 +506,7 @@ export function markAsyncSubagentOrphaned(state: AsyncSubagentState): void {
   state.statusTextEl.setText('Orphaned');
 
   // Update status indicator
-  state.statusEl.className = 'claudian-subagent-status status-error';
+  state.statusEl.className = 'opencode-subagent-status status-error';
   state.statusEl.empty();
   setIcon(state.statusEl, 'alert-circle');
 
@@ -516,10 +516,10 @@ export function markAsyncSubagentOrphaned(state: AsyncSubagentState): void {
 
   // Show orphaned message
   state.contentEl.empty();
-  const orphanEl = state.contentEl.createDiv({ cls: 'claudian-subagent-done claudian-async-orphaned' });
-  const branchEl = orphanEl.createDiv({ cls: 'claudian-subagent-branch' });
+  const orphanEl = state.contentEl.createDiv({ cls: 'opencode-subagent-done opencode-async-orphaned' });
+  const branchEl = orphanEl.createDiv({ cls: 'opencode-subagent-branch' });
   branchEl.setText('└─');
-  const textEl = orphanEl.createDiv({ cls: 'claudian-subagent-done-text' });
+  const textEl = orphanEl.createDiv({ cls: 'opencode-subagent-done-text' });
   textEl.setText('⚠️ Task orphaned');
 }
 
@@ -528,7 +528,7 @@ export function renderStoredAsyncSubagent(
   parentEl: HTMLElement,
   subagent: SubagentInfo
 ): HTMLElement {
-  const wrapperEl = parentEl.createDiv({ cls: 'claudian-subagent-list' });
+  const wrapperEl = parentEl.createDiv({ cls: 'opencode-subagent-list' });
   const statusClass = getAsyncDisplayStatus(subagent.asyncStatus);
   setAsyncWrapperStatus(wrapperEl, statusClass);
 
@@ -544,28 +544,28 @@ export function renderStoredAsyncSubagent(
   const statusText = getAsyncStatusText(subagent.asyncStatus);
 
   // Header
-  const headerEl = wrapperEl.createDiv({ cls: 'claudian-subagent-header' });
+  const headerEl = wrapperEl.createDiv({ cls: 'opencode-subagent-header' });
   headerEl.setAttribute('tabindex', '0');
   headerEl.setAttribute('role', 'button');
   headerEl.setAttribute('aria-label', `Background task: ${subagent.description} - Status: ${statusText}`);
 
-  const iconEl = headerEl.createDiv({ cls: 'claudian-subagent-icon' });
+  const iconEl = headerEl.createDiv({ cls: 'opencode-subagent-icon' });
   iconEl.setAttribute('aria-hidden', 'true');
-  setIcon(iconEl, 'bot');
+  setIcon(iconEl, 'workflow');
 
-  const labelEl = headerEl.createDiv({ cls: 'claudian-subagent-label' });
+  const labelEl = headerEl.createDiv({ cls: 'opencode-subagent-label' });
   // Always show description for visibility
   labelEl.setText(truncateDescription(subagent.description));
 
   // Status text
-  const statusTextEl = headerEl.createDiv({ cls: 'claudian-subagent-status-text' });
+  const statusTextEl = headerEl.createDiv({ cls: 'opencode-subagent-status-text' });
   statusTextEl.setText(statusText);
 
   // Status indicator
   const statusIconClass = (displayStatus === 'error' || displayStatus === 'orphaned')
     ? 'status-error'
     : (displayStatus === 'completed' ? 'status-completed' : 'status-running');
-  const statusEl = headerEl.createDiv({ cls: `claudian-subagent-status ${statusIconClass}` });
+  const statusEl = headerEl.createDiv({ cls: `opencode-subagent-status ${statusIconClass}` });
   statusEl.setAttribute('aria-label', `Status: ${statusText}`);
 
   if (subagent.asyncStatus === 'completed') {
@@ -575,13 +575,13 @@ export function renderStoredAsyncSubagent(
   }
 
   // Content
-  const contentEl = wrapperEl.createDiv({ cls: 'claudian-subagent-content' });
+  const contentEl = wrapperEl.createDiv({ cls: 'opencode-subagent-content' });
 
   // Show status-appropriate content
-  const statusRow = contentEl.createDiv({ cls: 'claudian-subagent-done' });
-  const branchEl = statusRow.createDiv({ cls: 'claudian-subagent-branch' });
+  const statusRow = contentEl.createDiv({ cls: 'opencode-subagent-done' });
+  const branchEl = statusRow.createDiv({ cls: 'opencode-subagent-branch' });
   branchEl.setText('└─');
-  const textEl = statusRow.createDiv({ cls: 'claudian-subagent-done-text' });
+  const textEl = statusRow.createDiv({ cls: 'opencode-subagent-done-text' });
 
   if (subagent.asyncStatus === 'completed') {
     textEl.setText('DONE');

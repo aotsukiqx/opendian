@@ -9,7 +9,7 @@ import { Modal, Notice, setIcon, Setting } from 'obsidian';
 
 import type { EnvSnippet } from '../../../core/types';
 import type ClaudianPlugin from '../../../main';
-import type { ClaudianView } from '../../chat/ClaudianView';
+import type { OpencodeView } from '../../chat/OpencodeView';
 
 /** Modal for creating/editing environment variable snippets. */
 export class EnvSnippetModal extends Modal {
@@ -29,7 +29,7 @@ export class EnvSnippetModal extends Modal {
     this.setTitle(this.snippet ? 'Edit snippet' : 'Save snippet');
 
     // Make modal more compact
-    this.modalEl.addClass('claudian-env-snippet-modal');
+    this.modalEl.addClass('opencode-env-snippet-modal');
 
     let nameEl: HTMLInputElement;
     let descEl: HTMLInputElement;
@@ -94,21 +94,21 @@ export class EnvSnippetModal extends Modal {
         text.inputEl.rows = 8;
       });
     // Make textarea full width under the label
-    envVarsSetting.settingEl.addClass('claudian-env-snippet-setting');
-    envVarsSetting.controlEl.addClass('claudian-env-snippet-control');
+    envVarsSetting.settingEl.addClass('opencode-env-snippet-setting');
+    envVarsSetting.controlEl.addClass('opencode-env-snippet-control');
 
     // Compact button container
-    const buttonContainer = contentEl.createDiv({ cls: 'claudian-snippet-buttons' });
+    const buttonContainer = contentEl.createDiv({ cls: 'opencode-snippet-buttons' });
 
     const cancelBtn = buttonContainer.createEl('button', {
       text: 'Cancel',
-      cls: 'claudian-cancel-btn'
+      cls: 'opencode-cancel-btn'
     });
     cancelBtn.addEventListener('click', () => this.close());
 
     const saveBtn = buttonContainer.createEl('button', {
       text: this.snippet ? 'Update' : 'Save',
-      cls: 'claudian-save-btn'
+      cls: 'opencode-save-btn'
     });
     saveBtn.addEventListener('click', () => saveSnippet());
 
@@ -137,11 +137,11 @@ export class EnvSnippetManager {
     this.containerEl.empty();
 
     // Header with save button
-    const headerEl = this.containerEl.createDiv({ cls: 'claudian-snippet-header' });
-    headerEl.createSpan({ text: 'Snippets', cls: 'claudian-snippet-label' });
+    const headerEl = this.containerEl.createDiv({ cls: 'opencode-snippet-header' });
+    headerEl.createSpan({ text: 'Snippets', cls: 'opencode-snippet-label' });
 
     const saveBtn = headerEl.createEl('button', {
-      cls: 'claudian-settings-action-btn',
+      cls: 'opencode-settings-action-btn',
       attr: { 'aria-label': 'Save current' },
     });
     setIcon(saveBtn, 'plus');
@@ -150,7 +150,7 @@ export class EnvSnippetManager {
     const snippets = this.plugin.settings.envSnippets;
 
     if (snippets.length === 0) {
-      const emptyEl = this.containerEl.createDiv({ cls: 'claudian-snippet-empty' });
+      const emptyEl = this.containerEl.createDiv({ cls: 'opencode-snippet-empty' });
       emptyEl.setText('No saved environment snippets yet. Click "Save Current" to save your current environment configuration.');
       return;
     }
@@ -158,26 +158,26 @@ export class EnvSnippetManager {
     // Use snippets as-is (maintain creation order)
     const sortedSnippets = snippets;
 
-    const listEl = this.containerEl.createDiv({ cls: 'claudian-snippet-list' });
+    const listEl = this.containerEl.createDiv({ cls: 'opencode-snippet-list' });
 
     for (const snippet of sortedSnippets) {
-      const itemEl = listEl.createDiv({ cls: 'claudian-snippet-item' });
+      const itemEl = listEl.createDiv({ cls: 'opencode-snippet-item' });
 
-      const infoEl = itemEl.createDiv({ cls: 'claudian-snippet-info' });
+      const infoEl = itemEl.createDiv({ cls: 'opencode-snippet-info' });
 
-      const nameEl = infoEl.createDiv({ cls: 'claudian-snippet-name' });
+      const nameEl = infoEl.createDiv({ cls: 'opencode-snippet-name' });
       nameEl.setText(snippet.name);
 
       if (snippet.description) {
-        const descEl = infoEl.createDiv({ cls: 'claudian-snippet-description' });
+        const descEl = infoEl.createDiv({ cls: 'opencode-snippet-description' });
         descEl.setText(snippet.description);
       }
 
-      const actionsEl = itemEl.createDiv({ cls: 'claudian-snippet-actions' });
+      const actionsEl = itemEl.createDiv({ cls: 'opencode-snippet-actions' });
 
       // Restore button
       const restoreBtn = actionsEl.createEl('button', {
-        cls: 'claudian-settings-action-btn',
+        cls: 'opencode-settings-action-btn',
         attr: { 'aria-label': 'Insert' },
       });
       setIcon(restoreBtn, 'clipboard-paste');
@@ -191,7 +191,7 @@ export class EnvSnippetManager {
 
       // Edit button
       const editBtn = actionsEl.createEl('button', {
-        cls: 'claudian-settings-action-btn',
+        cls: 'opencode-settings-action-btn',
         attr: { 'aria-label': 'Edit' },
       });
       setIcon(editBtn, 'pencil');
@@ -201,7 +201,7 @@ export class EnvSnippetManager {
 
       // Delete button
       const deleteBtn = actionsEl.createEl('button', {
-        cls: 'claudian-settings-action-btn claudian-settings-delete-btn',
+        cls: 'opencode-settings-action-btn opencode-settings-delete-btn',
         attr: { 'aria-label': 'Delete' },
       });
       setIcon(deleteBtn, 'trash-2');
@@ -234,7 +234,7 @@ export class EnvSnippetManager {
 
   private async insertSnippet(snippet: EnvSnippet) {
     // Insert the snippet's environment variables into the input field
-    const envTextarea = document.querySelector('.claudian-settings-env-textarea') as HTMLTextAreaElement;
+    const envTextarea = document.querySelector('.opencode-settings-env-textarea') as HTMLTextAreaElement;
     if (envTextarea) {
       // Always clear and replace with snippet content
       const snippetContent = snippet.envVars.trim();
@@ -244,7 +244,7 @@ export class EnvSnippetManager {
       await this.plugin.applyEnvironmentVariables(snippetContent);
 
       // Trigger model selector refresh if it exists
-      const view = this.plugin.app.workspace.getLeavesOfType('claudian-view')[0]?.view as ClaudianView | undefined;
+      const view = this.plugin.app.workspace.getLeavesOfType('opencode-view')[0]?.view as OpencodeView | undefined;
       view?.refreshModelSelector();
 
     } else {
@@ -253,7 +253,7 @@ export class EnvSnippetManager {
       this.render();
 
       // Trigger model selector refresh if it exists
-      const view = this.plugin.app.workspace.getLeavesOfType('claudian-view')[0]?.view as ClaudianView | undefined;
+      const view = this.plugin.app.workspace.getLeavesOfType('opencode-view')[0]?.view as OpencodeView | undefined;
       view?.refreshModelSelector();
 
     }

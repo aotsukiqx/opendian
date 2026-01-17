@@ -74,7 +74,7 @@ export class InstructionModeManager {
     const wrapper = this.callbacks.getInputWrapper();
     if (!wrapper) return false;
 
-    wrapper.addClass('claudian-input-instruction-mode');
+    wrapper.addClass('opencode-input-instruction-mode');
     this.state = { active: true, rawInstruction: '' };
     this.inputEl.placeholder = INSTRUCTION_MODE_PLACEHOLDER;
     return true;
@@ -84,7 +84,7 @@ export class InstructionModeManager {
   private exitMode(): void {
     const wrapper = this.callbacks.getInputWrapper();
     if (wrapper) {
-      wrapper.removeClass('claudian-input-instruction-mode');
+      wrapper.removeClass('opencode-input-instruction-mode');
     }
     this.state = { active: false, rawInstruction: '' };
     this.inputEl.placeholder = this.originalPlaceholder;
@@ -161,7 +161,7 @@ export class InstructionModeManager {
     // Remove indicator class and restore placeholder on destroy
     const wrapper = this.callbacks.getInputWrapper();
     if (wrapper) {
-      wrapper.removeClass('claudian-input-instruction-mode');
+      wrapper.removeClass('opencode-input-instruction-mode');
     }
     this.inputEl.placeholder = this.originalPlaceholder;
   }

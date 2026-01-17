@@ -46,8 +46,8 @@ export class ImageContextManager {
     this.callbacks = callbacks;
 
     // Create image preview in previewContainerEl, before file indicator if present
-    const fileIndicator = this.previewContainerEl.querySelector('.claudian-file-indicator');
-    this.imagePreviewEl = this.previewContainerEl.createDiv({ cls: 'claudian-image-preview' });
+    const fileIndicator = this.previewContainerEl.querySelector('.opencode-file-indicator');
+    this.imagePreviewEl = this.previewContainerEl.createDiv({ cls: 'opencode-image-preview' });
     if (fileIndicator && fileIndicator.parentElement === this.previewContainerEl) {
       this.previewContainerEl.insertBefore(this.imagePreviewEl, fileIndicator);
     }
@@ -81,11 +81,11 @@ export class ImageContextManager {
   }
 
   private setupDragAndDrop() {
-    const inputWrapper = this.containerEl.querySelector('.claudian-input-wrapper') as HTMLElement;
+    const inputWrapper = this.containerEl.querySelector('.opencode-input-wrapper') as HTMLElement;
     if (!inputWrapper) return;
 
-    this.dropOverlay = inputWrapper.createDiv({ cls: 'claudian-drop-overlay' });
-    const dropContent = this.dropOverlay.createDiv({ cls: 'claudian-drop-content' });
+    this.dropOverlay = inputWrapper.createDiv({ cls: 'opencode-drop-overlay' });
+    const dropContent = this.dropOverlay.createDiv({ cls: 'opencode-drop-content' });
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', '0 0 24 24');
     svg.setAttribute('width', '32');
@@ -134,7 +134,7 @@ export class ImageContextManager {
     e.preventDefault();
     e.stopPropagation();
 
-    const inputWrapper = this.containerEl.querySelector('.claudian-input-wrapper');
+    const inputWrapper = this.containerEl.querySelector('.opencode-input-wrapper');
     if (!inputWrapper) {
       this.dropOverlay?.removeClass('visible');
       return;
@@ -195,7 +195,7 @@ export class ImageContextManager {
     return IMAGE_EXTENSIONS[ext] || null;
   }
 
-  private async addImageFromFile(file: File, source: 'paste' | 'drop'): Promise<boolean> {
+  private async addImageFromFile(file: File, source: 'file' | 'paste' | 'drop'): Promise<boolean> {
     if (file.size > MAX_IMAGE_SIZE) {
       this.notifyImageError(`Image exceeds ${this.formatSize(MAX_IMAGE_SIZE)} limit.`);
       return false;
@@ -229,6 +229,15 @@ export class ImageContextManager {
     }
   }
 
+  /** Public method to add an image from a File object (for toolbar button). */
+  async addImage(file: File): Promise<boolean> {
+    if (!this.isImageFile(file)) {
+      this.notifyImageError('Unsupported image type.');
+      return false;
+    }
+    return this.addImageFromFile(file, 'file');
+  }
+
   private async fileToBase64(file: File): Promise<string> {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
@@ -255,9 +264,9 @@ export class ImageContextManager {
   }
 
   private renderImagePreview(id: string, image: ImageAttachment) {
-    const previewEl = this.imagePreviewEl.createDiv({ cls: 'claudian-image-chip' });
+    const previewEl = this.imagePreviewEl.createDiv({ cls: 'opencode-image-chip' });
 
-    const thumbEl = previewEl.createDiv({ cls: 'claudian-image-thumb' });
+    const thumbEl = previewEl.createDiv({ cls: 'opencode-image-thumb' });
     thumbEl.createEl('img', {
       attr: {
         src: `data:${image.mediaType};base64,${image.data}`,
@@ -265,15 +274,15 @@ export class ImageContextManager {
       },
     });
 
-    const infoEl = previewEl.createDiv({ cls: 'claudian-image-info' });
-    const nameEl = infoEl.createSpan({ cls: 'claudian-image-name' });
+    const infoEl = previewEl.createDiv({ cls: 'opencode-image-info' });
+    const nameEl = infoEl.createSpan({ cls: 'opencode-image-name' });
     nameEl.setText(this.truncateName(image.name, 20));
     nameEl.setAttribute('title', image.name);
 
-    const sizeEl = infoEl.createSpan({ cls: 'claudian-image-size' });
+    const sizeEl = infoEl.createSpan({ cls: 'opencode-image-size' });
     sizeEl.setText(this.formatSize(image.size));
 
-    const removeEl = previewEl.createSpan({ cls: 'claudian-image-remove' });
+    const removeEl = previewEl.createSpan({ cls: 'opencode-image-remove' });
     removeEl.setText('\u00D7');
     removeEl.setAttribute('aria-label', 'Remove image');
 
@@ -290,8 +299,8 @@ export class ImageContextManager {
   }
 
   private showFullImage(image: ImageAttachment) {
-    const overlay = document.body.createDiv({ cls: 'claudian-image-modal-overlay' });
-    const modal = overlay.createDiv({ cls: 'claudian-image-modal' });
+    const overlay = document.body.createDiv({ cls: 'opencode-image-modal-overlay' });
+    const modal = overlay.createDiv({ cls: 'opencode-image-modal' });
 
     modal.createEl('img', {
       attr: {
@@ -300,7 +309,7 @@ export class ImageContextManager {
       },
     });
 
-    const closeBtn = modal.createDiv({ cls: 'claudian-image-modal-close' });
+    const closeBtn = modal.createDiv({ cls: 'opencode-image-modal-close' });
     closeBtn.setText('\u00D7');
 
     const handleEsc = (e: KeyboardEvent) => {

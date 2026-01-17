@@ -1,13 +1,13 @@
 /* Approval Modal */
-.claudian-approval-modal {
+.opencode-approval-modal {
   padding: 16px;
 }
 
-.claudian-approval-info {
+.opencode-approval-info {
   margin-bottom: 12px;
 }
 
-.claudian-approval-tool {
+.opencode-approval-tool {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -17,16 +17,16 @@
   margin-bottom: 12px;
 }
 
-.claudian-approval-icon {
+.opencode-approval-icon {
   color: #D97757;
 }
 
-.claudian-approval-tool-name {
+.opencode-approval-tool-name {
   font-weight: 600;
   color: var(--text-normal);
 }
 
-.claudian-approval-desc {
+.opencode-approval-desc {
   padding: 12px;
   background: var(--background-primary-alt);
   border-radius: 6px;
@@ -37,13 +37,13 @@
   margin-bottom: 12px;
 }
 
-.claudian-approval-buttons {
+.opencode-approval-buttons {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
 }
 
-.claudian-approval-btn {
+.opencode-approval-btn {
   padding: 8px 16px;
   border-radius: 6px;
   font-size: 14px;
@@ -52,44 +52,44 @@
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.claudian-deny-btn {
+.opencode-deny-btn {
   background: var(--background-modifier-error);
   color: var(--text-on-accent);
   border: none;
 }
 
-.claudian-deny-btn:hover {
+.opencode-deny-btn:hover {
   opacity: 0.9;
 }
 
-.claudian-always-deny-btn {
+.opencode-always-deny-btn {
   background: var(--background-modifier-error);
   color: var(--text-on-accent);
   /* Use error-hover if available, fallback to slightly darker error color */
   border: 1px solid var(--background-modifier-error-hover, var(--background-modifier-error));
 }
 
-.claudian-always-deny-btn:hover {
+.opencode-always-deny-btn:hover {
   background: var(--background-modifier-error-hover, var(--background-modifier-error));
   filter: brightness(0.9);
 }
 
-.claudian-allow-btn {
+.opencode-allow-btn {
   background: var(--background-secondary);
   color: var(--text-normal);
   border: 1px solid var(--background-modifier-border);
 }
 
-.claudian-allow-btn:hover {
+.opencode-allow-btn:hover {
   background: var(--background-modifier-hover);
 }
 
-.claudian-always-btn {
+.opencode-always-btn {
   background: #D97757;
   color: white;
   border: none;
 }
 
-.claudian-always-btn:hover {
+.opencode-always-btn:hover {
   background: #c56a4a;
 }

@@ -91,6 +91,11 @@ export class InlineEditService {
   }
 
   private async sendMessage(prompt: string): Promise<InlineEditResult> {
+    // Skip when using OpenCode backend (requires Claude CLI)
+    if (this.plugin.settings.agentBackend === 'opencode') {
+      return { success: false, error: 'Inline edit requires Claude Code backend' };
+    }
+
     const vaultPath = getVaultPath(this.plugin.app);
     if (!vaultPath) {
       return { success: false, error: 'Could not determine vault path' };

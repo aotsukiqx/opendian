@@ -177,30 +177,30 @@ export class SlashCommandDropdown {
     this.dropdownEl.empty();
 
     if (this.filteredCommands.length === 0) {
-      const emptyEl = this.dropdownEl.createDiv({ cls: 'claudian-slash-empty' });
+      const emptyEl = this.dropdownEl.createDiv({ cls: 'opencode-slash-empty' });
       emptyEl.setText('No matching commands');
     } else {
       for (let i = 0; i < this.filteredCommands.length; i++) {
         const cmd = this.filteredCommands[i];
-        const itemEl = this.dropdownEl.createDiv({ cls: 'claudian-slash-item' });
+        const itemEl = this.dropdownEl.createDiv({ cls: 'opencode-slash-item' });
 
         if (i === this.selectedIndex) {
           itemEl.addClass('selected');
         }
 
         // Command name
-        const nameEl = itemEl.createSpan({ cls: 'claudian-slash-name' });
+        const nameEl = itemEl.createSpan({ cls: 'opencode-slash-name' });
         nameEl.setText(`/${cmd.name}`);
 
         // Argument hint
         if (cmd.argumentHint) {
-          const hintEl = itemEl.createSpan({ cls: 'claudian-slash-hint' });
+          const hintEl = itemEl.createSpan({ cls: 'opencode-slash-hint' });
           hintEl.setText(`[${cmd.argumentHint}]`);
         }
 
         // Description
         if (cmd.description) {
-          const descEl = itemEl.createDiv({ cls: 'claudian-slash-desc' });
+          const descEl = itemEl.createDiv({ cls: 'opencode-slash-desc' });
           descEl.setText(cmd.description);
         }
 
@@ -228,12 +228,12 @@ export class SlashCommandDropdown {
     if (this.isFixed) {
       // For inline editor: append to containerEl with fixed positioning
       const dropdown = this.containerEl.createDiv({
-        cls: 'claudian-slash-dropdown claudian-slash-dropdown-fixed',
+        cls: 'opencode-slash-dropdown opencode-slash-dropdown-fixed',
       });
       return dropdown;
     } else {
       // For chat panel: append to container with absolute positioning
-      return this.containerEl.createDiv({ cls: 'claudian-slash-dropdown' });
+      return this.containerEl.createDiv({ cls: 'opencode-slash-dropdown' });
     }
   }
 
@@ -256,7 +256,7 @@ export class SlashCommandDropdown {
   }
 
   private updateSelection(): void {
-    const items = this.dropdownEl?.querySelectorAll('.claudian-slash-item');
+    const items = this.dropdownEl?.querySelectorAll('.opencode-slash-item');
     items?.forEach((item, index) => {
       if (index === this.selectedIndex) {
         item.addClass('selected');

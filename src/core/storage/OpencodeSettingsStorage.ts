@@ -1,7 +1,7 @@
 /**
- * ClaudianSettingsStorage - Handles claudian-settings.json read/write.
+ * OpencodeSettingsStorage - Handles opencode-settings.json read/write.
  *
- * Manages the .claude/claudian-settings.json file for Claudian-specific settings.
+ * Manages the .claude/opencode-settings.json file for OpenCode-specific settings.
  * These settings are NOT shared with Claude Code CLI.
  *
  * Includes:
@@ -15,18 +15,18 @@
  * - State (merged from data.json)
  */
 
-import type { ClaudeModel, ClaudianSettings, PlatformBlockedCommands } from '../types';
+import type { ClaudeModel, OpencodeSettings, PlatformBlockedCommands } from '../types';
 import { DEFAULT_SETTINGS, getDefaultBlockedCommands } from '../types';
 import type { VaultFileAdapter } from './VaultFileAdapter';
 
-/** Path to Claudian settings file relative to vault root. */
-export const CLAUDIAN_SETTINGS_PATH = '.claude/claudian-settings.json';
+/** Path to OpenCode settings file relative to vault root. */
+export const OPENCODE_SETTINGS_PATH = '.claude/opencode-settings.json';
 
 /** Fields that are loaded separately (slash commands from .claude/commands/). */
 type SeparatelyLoadedFields = 'slashCommands';
 
-/** Settings stored in .claude/claudian-settings.json. */
-export type StoredClaudianSettings = Omit<ClaudianSettings, SeparatelyLoadedFields>;
+/** Settings stored in .claude/opencode-settings.json. */
+export type StoredOpencodeSettings = Omit<OpencodeSettings, SeparatelyLoadedFields>;
 
 /**
  * Normalize a command list, filtering invalid entries.
@@ -84,20 +84,20 @@ function normalizeHostnameCliPaths(value: unknown): Record<string, string> {
   return result;
 }
 
-export class ClaudianSettingsStorage {
+export class OpencodeSettingsStorage {
   constructor(private adapter: VaultFileAdapter) { }
 
   /**
-  * Load Claudian settings from .claude/claudian-settings.json.
+  * Load Claudian settings from .claude/opencode-settings.json.
   * Returns default settings if file doesn't exist.
   * Throws if file exists but cannot be read or parsed.
   */
-  async load(): Promise<StoredClaudianSettings> {
-    if (!(await this.adapter.exists(CLAUDIAN_SETTINGS_PATH))) {
+  async load(): Promise<StoredOpencodeSettings> {
+    if (!(await this.adapter.exists(OPENCODE_SETTINGS_PATH))) {
       return this.getDefaults();
     }
 
-    const content = await this.adapter.read(CLAUDIAN_SETTINGS_PATH);
+    const content = await this.adapter.read(OPENCODE_SETTINGS_PATH);
     const stored = JSON.parse(content) as Record<string, unknown>;
     const { activeConversationId: _activeConversationId, ...storedWithoutLegacy } = stored;
 
@@ -112,42 +112,42 @@ export class ClaudianSettingsStorage {
       blockedCommands,
       claudeCliPath: legacyCliPath,
       claudeCliPathsByHost: hostnameCliPaths,
-    } as StoredClaudianSettings;
+    } as StoredOpencodeSettings;
   }
 
   /**
-   * Save Claudian settings to .claude/claudian-settings.json.
+   * Save Claudian settings to .claude/opencode-settings.json.
    */
-  async save(settings: StoredClaudianSettings): Promise<void> {
+  async save(settings: StoredOpencodeSettings): Promise<void> {
     const content = JSON.stringify(settings, null, 2);
-    await this.adapter.write(CLAUDIAN_SETTINGS_PATH, content);
+    await this.adapter.write(OPENCODE_SETTINGS_PATH, content);
   }
 
   /**
    * Check if settings file exists.
    */
   async exists(): Promise<boolean> {
-    return this.adapter.exists(CLAUDIAN_SETTINGS_PATH);
+    return this.adapter.exists(OPENCODE_SETTINGS_PATH);
   }
 
   /**
    * Update specific fields in settings.
    */
-  async update(updates: Partial<StoredClaudianSettings>): Promise<void> {
+  async update(updates: Partial<StoredOpencodeSettings>): Promise<void> {
     const current = await this.load();
     await this.save({ ...current, ...updates });
   }
 
   /**
-   * Read legacy activeConversationId from claudian-settings.json, if present.
+   * Read legacy activeConversationId from opencode-settings.json, if present.
    * Used only for one-time migration to tabManagerState.
    */
   async getLegacyActiveConversationId(): Promise<string | null> {
-    if (!(await this.adapter.exists(CLAUDIAN_SETTINGS_PATH))) {
+    if (!(await this.adapter.exists(OPENCODE_SETTINGS_PATH))) {
       return null;
     }
 
-    const content = await this.adapter.read(CLAUDIAN_SETTINGS_PATH);
+    const content = await this.adapter.read(OPENCODE_SETTINGS_PATH);
     const stored = JSON.parse(content) as Record<string, unknown>;
     const value = stored.activeConversationId;
 
@@ -159,14 +159,14 @@ export class ClaudianSettingsStorage {
   }
 
   /**
-   * Remove legacy activeConversationId from claudian-settings.json.
+   * Remove legacy activeConversationId from opencode-settings.json.
    */
   async clearLegacyActiveConversationId(): Promise<void> {
-    if (!(await this.adapter.exists(CLAUDIAN_SETTINGS_PATH))) {
+    if (!(await this.adapter.exists(OPENCODE_SETTINGS_PATH))) {
       return;
     }
 
-    const content = await this.adapter.read(CLAUDIAN_SETTINGS_PATH);
+    const content = await this.adapter.read(OPENCODE_SETTINGS_PATH);
     const stored = JSON.parse(content) as Record<string, unknown>;
 
     if (!('activeConversationId' in stored)) {
@@ -175,7 +175,7 @@ export class ClaudianSettingsStorage {
 
     delete stored.activeConversationId;
     const nextContent = JSON.stringify(stored, null, 2);
-    await this.adapter.write(CLAUDIAN_SETTINGS_PATH, nextContent);
+    await this.adapter.write(OPENCODE_SETTINGS_PATH, nextContent);
   }
 
   /**
@@ -199,7 +199,7 @@ export class ClaudianSettingsStorage {
   /**
    * Get default settings (excluding separately loaded fields).
    */
-  private getDefaults(): StoredClaudianSettings {
+  private getDefaults(): StoredOpencodeSettings {
     const {
       slashCommands: _,
       ...defaults

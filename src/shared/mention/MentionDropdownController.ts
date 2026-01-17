@@ -58,11 +58,11 @@ export class MentionDropdownController {
     this.fixed = options.fixed ?? false;
 
     this.dropdown = new SelectableDropdown<MentionItem>(this.containerEl, {
-      listClassName: 'claudian-mention-dropdown',
-      itemClassName: 'claudian-mention-item',
-      emptyClassName: 'claudian-mention-empty',
+      listClassName: 'opencode-mention-dropdown',
+      itemClassName: 'opencode-mention-item',
+      emptyClassName: 'opencode-mention-empty',
       fixed: this.fixed,
-      fixedClassName: 'claudian-mention-dropdown-fixed',
+      fixedClassName: 'opencode-mention-dropdown-fixed',
     });
   }
 
@@ -355,7 +355,7 @@ export class MentionDropdownController {
         return undefined;
       },
       renderItem: (item, itemEl) => {
-        const iconEl = itemEl.createSpan({ cls: 'claudian-mention-icon' });
+        const iconEl = itemEl.createSpan({ cls: 'opencode-mention-icon' });
         if (item.type === 'mcp-server') {
           iconEl.innerHTML = MCP_ICON_SVG;
         } else if (item.type === 'context-file') {
@@ -366,23 +366,23 @@ export class MentionDropdownController {
           setIcon(iconEl, 'file-text');
         }
 
-        const textEl = itemEl.createSpan({ cls: 'claudian-mention-text' });
+        const textEl = itemEl.createSpan({ cls: 'opencode-mention-text' });
 
         if (item.type === 'mcp-server') {
-          const nameEl = textEl.createSpan({ cls: 'claudian-mention-name' });
+          const nameEl = textEl.createSpan({ cls: 'opencode-mention-name' });
           nameEl.setText(`@${item.name}`);
         } else if (item.type === 'context-folder') {
           const nameEl = textEl.createSpan({
-            cls: 'claudian-mention-name claudian-mention-name-folder',
+            cls: 'opencode-mention-name opencode-mention-name-folder',
           });
           nameEl.setText(`@${item.name}/`);
         } else if (item.type === 'context-file') {
           const nameEl = textEl.createSpan({
-            cls: 'claudian-mention-name claudian-mention-name-context',
+            cls: 'opencode-mention-name opencode-mention-name-context',
           });
           nameEl.setText(item.name);
         } else {
-          const pathEl = textEl.createSpan({ cls: 'claudian-mention-path' });
+          const pathEl = textEl.createSpan({ cls: 'opencode-mention-path' });
           pathEl.setText(item.path || item.name);
         }
       },

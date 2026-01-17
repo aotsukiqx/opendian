@@ -1,23 +1,23 @@
 /* Todo Panel - persistent bottom panel for todos */
 
 /* Fixed container between messages and input */
-.claudian-todo-panel-container {
+.opencode-todo-panel-container {
   flex-shrink: 0;
   padding: 0 12px;
 }
 
 /* Main container - no border/background, flows seamlessly */
-.claudian-todo-panel {
+.opencode-todo-panel {
   padding: 0;
 }
 
 /* Todos container */
-.claudian-todo-panel-todos {
+.opencode-todo-panel-todos {
   margin-top: 4px;
 }
 
 /* Header (collapsed view) - subtle hover only */
-.claudian-todo-panel-header {
+.opencode-todo-panel-header {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -28,30 +28,30 @@
   overflow: hidden;
 }
 
-.claudian-todo-panel-header:hover {
+.opencode-todo-panel-header:hover {
   background: var(--background-modifier-hover);
 }
 
-.claudian-todo-panel-header:focus-visible {
+.opencode-todo-panel-header:focus-visible {
   outline: 2px solid var(--interactive-accent);
   outline-offset: 2px;
 }
 
 /* List icon */
-.claudian-todo-panel-icon {
+.opencode-todo-panel-icon {
   display: flex;
   align-items: center;
   color: var(--interactive-accent);
   flex-shrink: 0;
 }
 
-.claudian-todo-panel-icon svg {
+.opencode-todo-panel-icon svg {
   width: 16px;
   height: 16px;
 }
 
 /* Label */
-.claudian-todo-panel-label {
+.opencode-todo-panel-label {
   font-family: var(--font-monospace);
   font-size: 13px;
   font-weight: 500;
@@ -59,7 +59,7 @@
 }
 
 /* Current task preview (collapsed state) */
-.claudian-todo-panel-current {
+.opencode-todo-panel-current {
   font-family: var(--font-monospace);
   font-size: 13px;
   color: var(--text-muted);
@@ -70,19 +70,19 @@
 }
 
 /* Content (expanded list) */
-.claudian-todo-panel-content {
+.opencode-todo-panel-content {
   padding: 2px 0;
 }
 
 /* Individual todo item - reuses existing styles */
-.claudian-todo-panel-content .claudian-todo-item {
+.opencode-todo-panel-content .opencode-todo-item {
   display: flex;
   align-items: flex-start;
   gap: 6px;
   padding: 1px 0;
 }
 
-.claudian-todo-panel-content .claudian-todo-status-icon {
+.opencode-todo-panel-content .opencode-todo-status-icon {
   display: flex;
   align-items: center;
   flex-shrink: 0;
@@ -91,12 +91,12 @@
   margin-top: 1px;
 }
 
-.claudian-todo-panel-content .claudian-todo-status-icon svg {
+.opencode-todo-panel-content .opencode-todo-status-icon svg {
   width: 16px;
   height: 16px;
 }
 
-.claudian-todo-panel-content .claudian-todo-text {
+.opencode-todo-panel-content .opencode-todo-text {
   font-family: var(--font-monospace);
   font-size: 13px;
   line-height: 1.4;
@@ -104,40 +104,40 @@
 }
 
 /* Status-specific styling */
-.claudian-todo-panel-content .claudian-todo-pending .claudian-todo-status-icon {
+.opencode-todo-panel-content .opencode-todo-pending .opencode-todo-status-icon {
   color: var(--text-normal);
 }
 
-.claudian-todo-panel-content .claudian-todo-pending .claudian-todo-status-icon svg {
+.opencode-todo-panel-content .opencode-todo-pending .opencode-todo-status-icon svg {
   transform: scale(2);
 }
 
-.claudian-todo-panel-content .claudian-todo-pending .claudian-todo-text {
+.opencode-todo-panel-content .opencode-todo-pending .opencode-todo-text {
   color: var(--text-normal);
 }
 
-.claudian-todo-panel-content .claudian-todo-in_progress .claudian-todo-status-icon {
+.opencode-todo-panel-content .opencode-todo-in_progress .opencode-todo-status-icon {
   color: var(--interactive-accent);
 }
 
-.claudian-todo-panel-content .claudian-todo-in_progress .claudian-todo-status-icon svg {
+.opencode-todo-panel-content .opencode-todo-in_progress .opencode-todo-status-icon svg {
   transform: scale(2);
 }
 
-.claudian-todo-panel-content .claudian-todo-in_progress .claudian-todo-text {
+.opencode-todo-panel-content .opencode-todo-in_progress .opencode-todo-text {
   color: var(--text-normal);
 }
 
-.claudian-todo-panel-content .claudian-todo-completed .claudian-todo-status-icon {
+.opencode-todo-panel-content .opencode-todo-completed .opencode-todo-status-icon {
   color: var(--color-green);
 }
 
-.claudian-todo-panel-content .claudian-todo-completed .claudian-todo-status-icon svg {
+.opencode-todo-panel-content .opencode-todo-completed .opencode-todo-status-icon svg {
   width: 12px;
   height: 12px;
   transform: translateX(3px);
 }
 
-.claudian-todo-panel-content .claudian-todo-completed .claudian-todo-text {
+.opencode-todo-panel-content .opencode-todo-completed .opencode-todo-text {
   color: var(--text-muted);
 }

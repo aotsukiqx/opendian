@@ -216,12 +216,35 @@ export interface KeyboardNavigationSettings {
 }
 
 /**
+ * OpenCode server configuration (written to opencode.json).
+ */
+export interface OpencodeServerConfig {
+  hostname: string;
+  port: number;
+  timeout: number;
+  /** Auto-start server on plugin load */
+  autoStart: boolean;
+  /** Enable mDNS discovery */
+  enableMdns: boolean;
+  /** Allowed CORS origins */
+  corsOrigins: string[];
+  /** Connect to external server instead of spawning local process */
+  externalServer: boolean;
+}
+
+/**
  * Claudian-specific settings stored in .claude/claudian-settings.json.
  * These settings are NOT shared with Claude Code CLI.
  */
-export interface ClaudianSettings {
+export interface OpencodeSettings {
   // User preferences
   userName: string;
+
+  // Backend selection
+  agentBackend: 'claude-code' | 'opencode';
+  opencodeConfig: OpencodeServerConfig;
+  /** Server password (runtime only, NOT written to opencode.json) */
+  opencodePassword?: string;
 
   // Security (Claudian-specific, CC uses permissions.deny instead)
   enableBlocklist: boolean;
@@ -234,6 +257,21 @@ export interface ClaudianSettings {
   enableAutoTitleGeneration: boolean;
   titleGenerationModel: string;  // Model for auto title generation (empty = auto)
   show1MModel: boolean;  // Show Sonnet (1M) in model selector (requires Max subscription)
+  opencodeModels?: Array<{
+    value: string;
+    label: string;
+    description: string;
+    provider: string;
+    modelId: string;
+    reasoning: boolean;
+    temperature: boolean;
+  }>;  // Cached models from OpenCode server
+  opencodeAgents?: Array<{
+    value: string;
+    name: string;
+    description: string;
+  }>;  // Cached agents from OpenCode server
+  currentAgent?: string;  // Currently selected agent for OpenCode
 
   // Content settings
   excludedTags: string[];
@@ -278,9 +316,22 @@ export interface ClaudianSettings {
 export type Permission = LegacyPermission;
 
 /** Default Claudian-specific settings. */
-export const DEFAULT_SETTINGS: ClaudianSettings = {
+export const DEFAULT_SETTINGS: OpencodeSettings = {
   // User preferences
   userName: '',
+
+  // Backend selection
+  agentBackend: 'claude-code',
+  opencodeConfig: {
+    hostname: '127.0.0.1',
+    port: 4096,
+    timeout: 5000,
+    autoStart: true,
+    enableMdns: false,
+    corsOrigins: ['app://obsidian.md'],
+    externalServer: false,
+  },
+  opencodePassword: '',
 
   // Security
   enableBlocklist: true,

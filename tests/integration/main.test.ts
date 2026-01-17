@@ -1,6 +1,6 @@
 import * as os from 'os';
 
-import { DEFAULT_SETTINGS, VIEW_TYPE_CLAUDIAN } from '@/core/types';
+import { DEFAULT_SETTINGS, VIEW_TYPE_OPENCODE } from '@/core/types';
 
 // Mock fs for ClaudianService
 jest.mock('fs');
@@ -66,7 +66,7 @@ describe('ClaudianPlugin', () => {
       await plugin.onload();
 
       expect((plugin.registerView as jest.Mock)).toHaveBeenCalledWith(
-        VIEW_TYPE_CLAUDIAN,
+        VIEW_TYPE_OPENCODE,
         expect.any(Function)
       );
     });
@@ -161,7 +161,7 @@ describe('ClaudianPlugin', () => {
 
       expect(mockApp.workspace.getRightLeaf).toHaveBeenCalledWith(false);
       expect(mockRightLeaf.setViewState).toHaveBeenCalledWith({
-        type: VIEW_TYPE_CLAUDIAN,
+        type: VIEW_TYPE_OPENCODE,
         active: true,
       });
     });

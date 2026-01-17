@@ -1,171 +1,187 @@
 {
   "common": {
-    "save": "Guardar",
-    "cancel": "Cancelar",
-    "delete": "Eliminar",
-    "edit": "Editar",
-    "add": "Agregar",
-    "remove": "Eliminar",
-    "clear": "Limpiar",
-    "clearAll": "Limpiar todo",
-    "loading": "Cargando",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "remove": "Remove",
+    "clear": "Clear",
+    "clearAll": "Clear all",
+    "loading": "Loading",
     "error": "Error",
-    "success": "Éxito",
-    "warning": "Advertencia",
-    "confirm": "Confirmar",
-    "settings": "Configuración",
-    "advanced": "Avanzado",
-    "enabled": "Habilitado",
-    "disabled": "Deshabilitado",
-    "platform": "Plataforma"
+    "success": "Success",
+    "warning": "Warning",
+    "confirm": "Confirm",
+    "settings": "Settings",
+    "advanced": "Advanced",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "platform": "Platform"
   },
   "settings": {
-    "title": "Configuración de Claudian",
-    "customization": "Personalización",
+    "title": "OpenCode Settings",
+    "customization": "Customization",
     "userName": {
-      "name": "¿Cómo debería Claudian llamarte?",
-      "desc": "Tu nombre para saludos personalizados (dejar vacío para saludos genéricos)"
+      "name": "What should OpenCode call you?",
+      "desc": "Your name for personalized greetings (leave empty for generic greetings)"
     },
     "excludedTags": {
-      "name": "Etiquetas excluidas",
-      "desc": "Las notas con estas etiquetas no se cargarán automáticamente como contexto (una por línea, sin #)"
+      "name": "Excluded tags",
+      "desc": "Notes with these tags will not auto-load as context (one per line, without #)"
     },
     "mediaFolder": {
-      "name": "Carpeta de medios",
-      "desc": "Carpeta que contiene archivos adjuntos/imagenes. Cuando las notas usan ![[image.jpg]], Claude buscará aquí. Dejar vacío para la raíz del depósito."
+      "name": "Media folder",
+      "desc": "Folder containing attachments/images. When notes use ![[image.jpg]], OpenCode will look here. Leave empty for vault root."
     },
     "systemPrompt": {
-      "name": "Prompt de sistema personalizado",
-      "desc": "Instrucciones adicionales añadidas al prompt de sistema por defecto"
+      "name": "Custom system prompt",
+      "desc": "Additional instructions appended to the default system prompt"
     },
     "autoTitle": {
-      "name": "Generar automáticamente títulos de conversación",
-      "desc": "Genera automáticamente títulos de conversación después del primer intercambio."
+      "name": "Auto-generate conversation titles",
+      "desc": "Automatically generate conversation titles after the first exchange."
     },
     "titleModel": {
-      "name": "Modelo de generación de títulos",
-      "desc": "Modelo utilizado para generar automáticamente títulos de conversación.",
+      "name": "Title generation model",
+      "desc": "Model used for auto-generating conversation titles.",
       "auto": "Auto (Haiku)"
     },
     "navMappings": {
-      "name": "Mapeos de navegación estilo Vim",
-      "desc": "Un mapeo por línea. Formato: \"map <tecla> <acción>\" (acciones: scrollUp, scrollDown, focusInput)."
+      "name": "Vim-style navigation mappings",
+      "desc": "One mapping per line. Format: \"map <key> <action>\" (actions: scrollUp, scrollDown, focusInput)."
     },
-    "hotkeys": "Atajos de teclado",
+    "hotkeys": "Hotkeys",
     "inlineEditHotkey": {
-      "name": "Atajo de edición en línea",
-      "descNoKey": "No hay atajo configurado. Clic para configurar.",
-      "descWithKey": "Actual: {hotkey}",
-      "btnSet": "Configurar atajo",
-      "btnChange": "Cambiar"
+      "name": "Inline edit hotkey",
+      "descNoKey": "No hotkey set. Click to configure.",
+      "descWithKey": "Current: {hotkey}",
+      "btnSet": "Set hotkey",
+      "btnChange": "Change"
     },
     "openChatHotkey": {
-      "name": "Atajo para abrir chat",
-      "descNoKey": "No hay atajo configurado. Clic para configurar.",
-      "descWithKey": "Actual: {hotkey}",
-      "btnSet": "Configurar atajo",
-      "btnChange": "Cambiar"
+      "name": "Open chat hotkey",
+      "descNoKey": "No hotkey set. Click to configure.",
+      "descWithKey": "Current: {hotkey}",
+      "btnSet": "Set hotkey",
+      "btnChange": "Change"
     },
     "newTabHotkey": {
-      "name": "Atajo nueva pestaña",
-      "descNoKey": "No hay atajo configurado. Clic para configurar.",
-      "descWithKey": "Actual: {hotkey}",
-      "btnSet": "Configurar atajo",
-      "btnChange": "Cambiar"
+      "name": "New tab hotkey",
+      "descNoKey": "No hotkey set. Click to configure.",
+      "descWithKey": "Current: {hotkey}",
+      "btnSet": "Set hotkey",
+      "btnChange": "Change"
     },
     "newSessionHotkey": {
-      "name": "Atajo nueva sesión",
-      "descNoKey": "No hay atajo configurado. Clic para configurar.",
-      "descWithKey": "Actual: {hotkey}",
-      "btnSet": "Configurar atajo",
-      "btnChange": "Cambiar"
+      "name": "New session hotkey",
+      "descNoKey": "No hotkey set. Click to configure.",
+      "descWithKey": "Current: {hotkey}",
+      "btnSet": "Set hotkey",
+      "btnChange": "Change"
     },
     "closeTabHotkey": {
-      "name": "Atajo cerrar pestaña",
-      "descNoKey": "No hay atajo configurado. Clic para configurar.",
-      "descWithKey": "Actual: {hotkey}",
-      "btnSet": "Configurar atajo",
-      "btnChange": "Cambiar"
+      "name": "Close tab hotkey",
+      "descNoKey": "No hotkey set. Click to configure.",
+      "descWithKey": "Current: {hotkey}",
+      "btnSet": "Set hotkey",
+      "btnChange": "Change"
     },
     "slashCommands": {
-      "name": "Comandos slash",
-      "desc": "Crea plantillas de prompts personalizadas activadas por /command. Usa $ARGUMENTS para todos los argumentos, $1/$2 para argumentos posicionales, @file para contenido de archivo y !`bash` para salida de comandos."
+      "name": "Slash Commands",
+      "desc": "Create custom prompt templates triggered by /command. Use $ARGUMENTS for all arguments, $1/$2 for positional args, @file for file content, and !`bash` for command output."
     },
     "mcpServers": {
-      "name": "Servidores MCP",
-      "desc": "Configura servidores Model Context Protocol para extender las capacidades de Claude con herramientas y fuentes de datos externas. Los servidores con modo de guardado de contexto requieren @mention para activarse."
+      "name": "MCP Servers",
+      "desc": "Configure Model Context Protocol servers to extend OpenCode's capabilities with external tools and data sources. Servers with context-saving mode require @mention to activate."
     },
     "plugins": {
-      "name": "Plugins de Claude Code",
-      "desc": "Habilita o deshabilita plugins de Claude Code descubiertos desde ~/.claude/plugins. Los plugins habilitados se almacenan por bóveda."
+      "name": "OpenCode Plugins",
+      "desc": "Enable or disable plugins discovered from ~/.opencode/plugins. Enabled plugins are stored per vault."
     },
-    "safety": "Seguridad",
+    "safety": "Safety",
     "loadUserSettings": {
-      "name": "Cargar configuración de usuario Claude",
-      "desc": "Carga ~/.claude/settings.json. Cuando está habilitado, las reglas de permisos del usuario pueden eludir el modo seguro."
+      "name": "Load user Claude settings",
+      "desc": "Load ~/.claude/settings.json. When enabled, user's Claude Code permission rules may bypass Safe mode."
     },
     "enableBlocklist": {
-      "name": "Habilitar lista negra de comandos",
-      "desc": "Bloquea comandos bash potencialmente peligrosos"
+      "name": "Enable command blocklist",
+      "desc": "Block potentially dangerous bash commands"
     },
     "blockedCommands": {
-      "name": "Comandos bloqueados ({platform})",
-      "desc": "Patrones a bloquear en {platform} (uno por línea). Soporta expresiones regulares.",
-      "unixName": "Comandos bloqueados (Unix/Git Bash)",
-      "unixDesc": "Los patrones Unix también se bloquean en Windows porque Git Bash puede invocarlos."
+      "name": "Blocked commands ({platform})",
+      "desc": "Patterns to block on {platform} (one per line). Supports regex.",
+      "unixName": "Blocked commands (Unix/Git Bash)",
+      "unixDesc": "Unix patterns also blocked on Windows because Git Bash can invoke them."
     },
     "exportPaths": {
-      "name": "Rutas de exportación permitidas",
-      "desc": "Rutas fuera del depósito donde se pueden exportar archivos (una por línea). Soporta ~ para el directorio home."
+      "name": "Allowed export paths",
+      "desc": "Paths outside the vault where files can be exported (one per line). Supports ~ for home directory."
     },
-    "environment": "Entorno",
+    "environment": "Environment",
     "customVariables": {
-      "name": "Variables personalizadas",
-      "desc": "Variables de entorno para Claude SDK (formato KEY=VALUE, una por línea)"
+      "name": "Custom variables",
+      "desc": "Environment variables for Claude SDK (KEY=VALUE format, one per line)"
     },
     "envSnippets": {
-      "name": "Fragmentos de entorno",
-      "addBtn": "Añadir fragmento",
-      "editBtn": "Editar",
-      "deleteBtn": "Eliminar",
-      "useBtn": "Usar",
-      "noSnippets": "No hay fragmentos de entorno guardados.",
+      "name": "Environment Snippets",
+      "addBtn": "Add snippet",
+      "editBtn": "Edit",
+      "deleteBtn": "Delete",
+      "useBtn": "Use",
+      "noSnippets": "No environment snippets saved yet.",
       "modal": {
-        "title": "Fragmento de entorno",
-        "name": "Nombre",
-        "namePlaceholder": "ej: API de producción",
-        "description": "Descripción",
-        "descPlaceholder": "Descripción opcional",
-        "envVars": "Variables de entorno",
+        "title": "Environment Snippet",
+        "name": "Name",
+        "namePlaceholder": "e.g., Production API",
+        "description": "Description",
+        "descPlaceholder": "Optional description",
+        "envVars": "Environment Variables",
         "envVarsPlaceholder": "ANTHROPIC_API_KEY=your-key\nANTHROPIC_BASE_URL=https://api.example.com",
-        "save": "Guardar",
-        "cancel": "Cancelar"
+        "save": "Save",
+        "cancel": "Cancel"
       }
     },
-    "advanced": "Avanzado",
+    "advanced": "Advanced",
+    "agentBackend": {
+      "name": "Agent backend",
+      "desc": "Choose which agent backend to use. OpenCode is recommended for local development. Claude Code is available as an alternative."
+    },
+    "opencodeHostname": {
+      "name": "OpenCode hostname",
+      "desc": "Hostname where OpenCode server is running (default: 127.0.0.1)"
+    },
+    "opencodePort": {
+      "name": "OpenCode port",
+      "desc": "Port where OpenCode server is running (default: 4096)"
+    },
+    "opencodeTimeout": {
+      "name": "OpenCode timeout",
+      "desc": "Timeout in milliseconds for OpenCode API requests (default: 5000)"
+    },
     "show1MModel": {
-      "name": "Habilitar Sonnet con ventana de contexto de 1M",
-      "desc": "Reemplazar Sonnet estándar con Sonnet (1M) en el selector de modelos. Mismo precio bajo 200k tokens. Requiere suscripción Max."
+      "name": "Enable extended context model",
+      "desc": "Enable models with extended context windows in the model selector."
     },
     "maxTabs": {
-      "name": "Máximo de pestañas de chat",
-      "desc": "Número máximo de pestañas de chat simultáneas (3-10). Cada pestaña usa una sesión de Claude separada.",
-      "warning": "Más de 5 pestañas puede afectar el rendimiento y el uso de memoria.",
+      "name": "Maximum chat tabs",
+      "desc": "Maximum number of concurrent chat tabs (3-10). Each tab uses a separate session.",
+      "warning": "More than 5 tabs may impact performance and memory usage.",
       "range": "{min} - {max}"
     },
     "cliPath": {
-      "name": "Ruta CLI Claude",
-      "desc": "Ruta personalizada a Claude Code CLI. Dejar vacío para detección automática.",
-      "descWindows": "Para el instalador nativo, use claude.exe. Para instalaciones con npm/pnpm/yarn u otros gestores de paquetes, use la ruta cli.js (no claude.cmd).",
-      "descUnix": "Pegue la salida de \"which claude\" — funciona tanto para instalaciones nativas como npm/pnpm/yarn.",
+      "name": "CLI path",
+      "desc": "Custom path to CLI. Leave empty for auto-detection.",
+      "descWindows": "For the native installer, use the executable. For npm/pnpm/yarn installs, use the cli.js path.",
+      "descUnix": "Paste the output of \"which <cli>\" — works for both native and npm/pnpm/yarn installs.",
       "validation": {
-        "notExist": "La ruta no existe",
-        "isDirectory": "La ruta es un directorio, no un archivo"
+        "notExist": "Path does not exist",
+        "isDirectory": "Path is a directory, not a file"
       }
     },
     "language": {
-      "name": "Idioma",
-      "desc": "Cambiar el idioma de visualización de la interfaz del plugin",
+      "name": "Language",
+      "desc": "Change the display language of the plugin interface",
       "en": "English",
       "zh-CN": "简体中文",
       "zh-TW": "繁體中文",

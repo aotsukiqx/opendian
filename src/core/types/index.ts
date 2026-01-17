@@ -1,5 +1,5 @@
 /**
- * Claudian - Type definitions barrel export.
+ * OpenCode - Type definitions barrel export.
  *
  * Re-exports all types from modular type files.
  */
@@ -15,7 +15,7 @@ export {
   type SessionMetadata,
   type StreamChunk,
   type UsageInfo,
-  VIEW_TYPE_CLAUDIAN,
+  VIEW_TYPE_OPENCODE,
 } from './chat';
 
 // Model types
@@ -44,7 +44,7 @@ export {
 export {
   type CCPermissions,
   type CCSettings,
-  type ClaudianSettings,
+  type OpencodeSettings,
   type CliPlatformKey,
   createPermissionRule,
   DEFAULT_CC_PERMISSIONS,

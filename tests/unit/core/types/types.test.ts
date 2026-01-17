@@ -1,6 +1,6 @@
 import type {
   ChatMessage,
-  ClaudianSettings,
+  OpencodeSettings,
   Conversation,
   ConversationMeta,
   EnvSnippet,
@@ -17,13 +17,13 @@ import {
   legacyPermissionToCCRule,
   parseCCPermissionRule,
   resolveModelWithBetas,
-  VIEW_TYPE_CLAUDIAN
+  VIEW_TYPE_OPENCODE
 } from '@/core/types';
 
 describe('types.ts', () => {
-  describe('VIEW_TYPE_CLAUDIAN', () => {
+  describe('VIEW_TYPE_OPENCODE', () => {
     it('should be defined as the correct view type', () => {
-      expect(VIEW_TYPE_CLAUDIAN).toBe('claudian-view');
+      expect(VIEW_TYPE_OPENCODE).toBe('claudian-view');
     });
   });
 
@@ -82,10 +82,16 @@ describe('types.ts', () => {
     });
   });
 
-  describe('ClaudianSettings type', () => {
+  describe('OpencodeSettings type', () => {
     it('should be assignable with valid settings', () => {
-      const settings: ClaudianSettings = {
+      const settings: OpencodeSettings = {
         userName: '',
+        agentBackend: 'claude-code',
+        opencodeConfig: {
+          hostname: '127.0.0.1',
+          port: 4096,
+          timeout: 5000,
+        },
         enableBlocklist: false,
         blockedCommands: { unix: ['test'], windows: ['test-win'] },
         model: 'haiku',
@@ -117,8 +123,14 @@ describe('types.ts', () => {
     });
 
     it('should accept custom model strings', () => {
-      const settings: ClaudianSettings = {
+      const settings: OpencodeSettings = {
         userName: '',
+        agentBackend: 'opencode',
+        opencodeConfig: {
+          hostname: 'localhost',
+          port: 4096,
+          timeout: 10000,
+        },
         enableBlocklist: true,
         blockedCommands: { unix: [], windows: [] },
         model: 'anthropic/custom-model-v1',
@@ -148,8 +160,14 @@ describe('types.ts', () => {
     });
 
     it('should accept optional lastClaudeModel and lastCustomModel', () => {
-      const settings: ClaudianSettings = {
+      const settings: OpencodeSettings = {
         userName: '',
+        agentBackend: 'claude-code',
+        opencodeConfig: {
+          hostname: '127.0.0.1',
+          port: 4096,
+          timeout: 5000,
+        },
         enableBlocklist: true,
         blockedCommands: { unix: [], windows: [] },
         model: 'sonnet',

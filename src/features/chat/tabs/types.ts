@@ -8,6 +8,7 @@
 import type { Component, WorkspaceLeaf } from 'obsidian';
 
 import type { ClaudianService } from '../../../core/agent';
+import type { IAgentService } from '../../../core/agent/IAgentService';
 import type { SlashCommandManager } from '../../../core/commands';
 import type { SlashCommandDropdown } from '../../../shared/components/SlashCommandDropdown';
 import type {
@@ -23,6 +24,7 @@ import type { InstructionRefineService } from '../services/InstructionRefineServ
 import type { TitleGenerationService } from '../services/TitleGenerationService';
 import type { ChatState } from '../state';
 import type {
+  AgentSelector,
   ContextUsageMeter,
   ExternalContextSelector,
   FileContextManager,
@@ -31,6 +33,8 @@ import type {
   McpServerSelector,
   ModelSelector,
   PermissionToggle,
+  ProviderModelSelector,
+  SendButton,
   ThinkingBudgetSelector,
   TodoPanel,
 } from '../ui';
@@ -69,9 +73,9 @@ export const TEXTAREA_MIN_MAX_HEIGHT = 150;
 export const TEXTAREA_MAX_HEIGHT_PERCENT = 0.55;
 
 /**
- * Minimal interface for the ClaudianView methods used by TabManager and Tab.
+ * Minimal interface for the OpencodeView methods used by TabManager and Tab.
  * Extends Component for Obsidian integration (event handling, cleanup).
- * Avoids circular dependency by not importing ClaudianView directly.
+ * Avoids circular dependency by not importing OpencodeView directly.
  */
 export interface TabManagerViewHost extends Component {
   /** Reference to the workspace leaf for revealing the view. */
@@ -128,11 +132,16 @@ export interface TabServices {
 export interface TabUIComponents {
   fileContextManager: FileContextManager | null;
   imageContextManager: ImageContextManager | null;
+  /** Claude Code only: model selector */
   modelSelector: ModelSelector | null;
+  /** OpenCode only: provider/model selector */
+  providerModelSelector: ProviderModelSelector | null;
   thinkingBudgetSelector: ThinkingBudgetSelector | null;
   externalContextSelector: ExternalContextSelector | null;
   mcpServerSelector: McpServerSelector | null;
   permissionToggle: PermissionToggle | null;
+  agentSelector: AgentSelector | null;
+  sendButton: SendButton | null;
   slashCommandManager: SlashCommandManager | null;
   slashCommandDropdown: SlashCommandDropdown | null;
   instructionModeManager: InstructionModeManager | null;
@@ -178,8 +187,8 @@ export interface TabData {
   /** Conversation ID bound to this tab (null for new/empty tabs). */
   conversationId: string | null;
 
-  /** Per-tab ClaudianService instance for independent streaming. */
-  service: ClaudianService | null;
+  /** Per-tab agent service instance for independent streaming. */
+  service: IAgentService | null;
 
   /** Whether the service has been initialized (lazy start). */
   serviceInitialized: boolean;

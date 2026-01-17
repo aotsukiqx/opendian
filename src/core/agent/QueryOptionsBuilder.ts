@@ -19,7 +19,7 @@ import type {
 import type { McpServerManager } from '../mcp';
 import type { PluginManager } from '../plugins';
 import { buildSystemPrompt, type SystemPromptSettings } from '../prompts/mainAgent';
-import type { ClaudianSettings, PermissionMode } from '../types';
+import type { OpencodeSettings, PermissionMode } from '../types';
 import { resolveModelWithBetas, THINKING_BUDGETS } from '../types';
 import {
   computeSystemPromptKey,
@@ -41,7 +41,7 @@ export interface QueryOptionsContext {
   /** Path to the Claude CLI executable. */
   cliPath: string;
   /** Current plugin settings. */
-  settings: ClaudianSettings;
+  settings: OpencodeSettings;
   /** Parsed environment variables (from settings). */
   customEnv: Record<string, string>;
   /** Enhanced PATH with CLI directories. */

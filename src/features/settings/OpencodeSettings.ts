@@ -1,5 +1,5 @@
 /**
- * Claudian - Settings tab
+ * OpenCode - Settings tab
  *
  * Plugin settings UI for hotkeys, customization, safety, and environment variables.
  */
@@ -12,10 +12,10 @@ import { getCurrentPlatformKey, getHostnameKey } from '../../core/types';
 import { DEFAULT_CLAUDE_MODELS } from '../../core/types/models';
 import { getAvailableLocales, getLocaleDisplayName, setLocale, t } from '../../i18n';
 import type { Locale } from '../../i18n/types';
-import type ClaudianPlugin from '../../main';
+import type OpencodePlugin from '../../main';
 import { getModelsFromEnvironment, parseEnvironmentVariables } from '../../utils/env';
 import { expandHomePath } from '../../utils/path';
-import type { ClaudianView } from '../chat/ClaudianView';
+import type { OpencodeView } from '../chat/OpencodeView';
 import { buildNavMappingText, parseNavMappings } from './keyboardNavigation';
 import { EnvSnippetManager } from './ui/EnvSnippetManager';
 import { McpSettingsManager } from './ui/McpSettingsManager';
@@ -71,10 +71,10 @@ function getHotkeyForCommand(app: App, commandId: string): string | null {
 }
 
 /** Plugin settings tab displayed in Obsidian's settings pane. */
-export class ClaudianSettingTab extends PluginSettingTab {
-  plugin: ClaudianPlugin;
+export class OpencodeSettingTab extends PluginSettingTab {
+  plugin: OpencodePlugin;
 
-  constructor(app: App, plugin: ClaudianPlugin) {
+  constructor(app: App, plugin: OpencodePlugin) {
     super(app, plugin);
     this.plugin = plugin;
   }
@@ -82,7 +82,7 @@ export class ClaudianSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.addClass('claudian-settings');
+    containerEl.addClass('opencode-settings');
 
     // Update i18n locale from settings
     setLocale(this.plugin.settings.locale);
@@ -156,7 +156,7 @@ export class ClaudianSettingTab extends PluginSettingTab {
             this.plugin.settings.mediaFolder = value.trim();
             await this.plugin.saveSettings();
           });
-        text.inputEl.addClass('claudian-settings-media-input');
+        text.inputEl.addClass('opencode-settings-media-input');
       });
 
     new Setting(containerEl)
@@ -338,37 +338,37 @@ export class ClaudianSettingTab extends PluginSettingTab {
     // Slash Commands section
     new Setting(containerEl).setName(t('settings.slashCommands.name')).setHeading();
 
-    const slashCommandsDesc = containerEl.createDiv({ cls: 'claudian-slash-settings-desc' });
+    const slashCommandsDesc = containerEl.createDiv({ cls: 'opencode-slash-settings-desc' });
     slashCommandsDesc.createEl('p', {
       text: t('settings.slashCommands.desc'),
       cls: 'setting-item-description',
     });
 
-    const slashCommandsContainer = containerEl.createDiv({ cls: 'claudian-slash-commands-container' });
+    const slashCommandsContainer = containerEl.createDiv({ cls: 'opencode-slash-commands-container' });
     new SlashCommandSettings(slashCommandsContainer, this.plugin);
 
     // MCP Servers section
     new Setting(containerEl).setName(t('settings.mcpServers.name')).setHeading();
 
-    const mcpDesc = containerEl.createDiv({ cls: 'claudian-mcp-settings-desc' });
+    const mcpDesc = containerEl.createDiv({ cls: 'opencode-mcp-settings-desc' });
     mcpDesc.createEl('p', {
       text: t('settings.mcpServers.desc'),
       cls: 'setting-item-description',
     });
 
-    const mcpContainer = containerEl.createDiv({ cls: 'claudian-mcp-container' });
+    const mcpContainer = containerEl.createDiv({ cls: 'opencode-mcp-container' });
     new McpSettingsManager(mcpContainer, this.plugin);
 
     // Claude Code Plugins section
     new Setting(containerEl).setName(t('settings.plugins.name')).setHeading();
 
-    const pluginsDesc = containerEl.createDiv({ cls: 'claudian-plugin-settings-desc' });
+    const pluginsDesc = containerEl.createDiv({ cls: 'opencode-plugin-settings-desc' });
     pluginsDesc.createEl('p', {
       text: t('settings.plugins.desc'),
       cls: 'setting-item-description',
     });
 
-    const pluginsContainer = containerEl.createDiv({ cls: 'claudian-plugins-container' });
+    const pluginsContainer = containerEl.createDiv({ cls: 'opencode-plugins-container' });
     new PluginSettingsManager(pluginsContainer, this.plugin);
 
     // Safety section
@@ -482,15 +482,142 @@ export class ClaudianSettingTab extends PluginSettingTab {
           });
         text.inputEl.rows = 6;
         text.inputEl.cols = 50;
-        text.inputEl.addClass('claudian-settings-env-textarea');
+        text.inputEl.addClass('opencode-settings-env-textarea');
       });
 
     // Environment Snippets subsection
-    const envSnippetsContainer = containerEl.createDiv({ cls: 'claudian-env-snippets-container' });
+    const envSnippetsContainer = containerEl.createDiv({ cls: 'opencode-env-snippets-container' });
     new EnvSnippetManager(envSnippetsContainer, this.plugin);
 
     // Advanced section
     new Setting(containerEl).setName(t('settings.advanced')).setHeading();
+
+    // Agent backend selection
+    new Setting(containerEl)
+      .setName(t('settings.agentBackend.name'))
+      .setDesc(t('settings.agentBackend.desc'))
+      .addDropdown((dropdown) => {
+        dropdown
+          .addOption('claude-code', 'Claude Code')
+          .addOption('opencode', 'OpenCode')
+          .setValue(this.plugin.settings.agentBackend)
+          .onChange(async (value: 'claude-code' | 'opencode') => {
+            this.plugin.settings.agentBackend = value;
+            await this.plugin.saveSettings();
+
+            // Show notice about requiring restart
+            new Notice('Backend changed. Please reload the plugin (Ctrl/Cmd+R) for changes to take effect.');
+          });
+      });
+
+    // OpenCode configuration (shown when backend is 'opencode')
+    const opencodeConfigContainer = containerEl.createDiv({ cls: 'opencode-opencode-config' });
+    opencodeConfigContainer.style.marginLeft = '20px';
+    opencodeConfigContainer.style.padding = '10px';
+    opencodeConfigContainer.style.borderLeft = '2px solid var(--interactive-accent)';
+    opencodeConfigContainer.style.display = this.plugin.settings.agentBackend === 'opencode' ? 'block' : 'none';
+
+    new Setting(opencodeConfigContainer)
+      .setName(t('settings.opencodeHostname.name'))
+      .setDesc(t('settings.opencodeHostname.desc'))
+      .addText((text) =>
+        text
+          .setPlaceholder('127.0.0.1')
+          .setValue(this.plugin.settings.opencodeConfig.hostname)
+          .onChange(async (value) => {
+            this.plugin.settings.opencodeConfig.hostname = value.trim() || '127.0.0.1';
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(opencodeConfigContainer)
+      .setName(t('settings.opencodePort.name'))
+      .setDesc(t('settings.opencodePort.desc'))
+      .addText((text) =>
+        text
+          .setPlaceholder('4096')
+          .setValue(String(this.plugin.settings.opencodeConfig.port))
+          .onChange(async (value) => {
+            const port = parseInt(value, 10);
+            this.plugin.settings.opencodeConfig.port = isNaN(port) ? 4096 : port;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(opencodeConfigContainer)
+      .setName(t('settings.opencodeTimeout.name'))
+      .setDesc(t('settings.opencodeTimeout.desc'))
+      .addText((text) =>
+        text
+          .setPlaceholder('5000')
+          .setValue(String(this.plugin.settings.opencodeConfig.timeout))
+          .onChange(async (value) => {
+            const timeout = parseInt(value, 10);
+            this.plugin.settings.opencodeConfig.timeout = isNaN(timeout) ? 5000 : timeout;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(opencodeConfigContainer)
+      .setName('Server Password')
+      .setDesc('OpenCode server password for authentication (optional)')
+      .addText((text) =>
+        text
+          .setPlaceholder('password')
+          .setValue(this.plugin.settings.opencodePassword ?? '')
+          .onChange(async (value) => {
+            this.plugin.settings.opencodePassword = value.trim();
+            await this.plugin.saveSettings();
+          })
+      );
+
+    // Auto-start server toggle
+    new Setting(opencodeConfigContainer)
+      .setName('Auto-start Server')
+      .setDesc('Automatically start OpenCode server when plugin loads')
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.opencodeConfig.autoStart ?? true)
+          .onChange(async (value) => {
+            this.plugin.settings.opencodeConfig.autoStart = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    // Enable mDNS discovery toggle
+    new Setting(opencodeConfigContainer)
+      .setName('Enable mDNS')
+      .setDesc('Enable mDNS discovery for network service advertising')
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.opencodeConfig.enableMdns ?? false)
+          .onChange(async (value) => {
+            this.plugin.settings.opencodeConfig.enableMdns = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    // External server toggle
+    new Setting(opencodeConfigContainer)
+      .setName('External Server')
+      .setDesc('Connect to an existing OpenCode server instead of spawning a local process')
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.opencodeConfig.externalServer ?? false)
+          .onChange(async (value) => {
+            this.plugin.settings.opencodeConfig.externalServer = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    // Show/hide OpenCode config based on backend selection
+    const updateOpencodeConfigVisibility = (): void => {
+      opencodeConfigContainer.style.display = this.plugin.settings.agentBackend === 'opencode' ? 'block' : 'none';
+    };
+
+    // Store references for visibility updates
+    const autoStartSetting = new Setting(opencodeConfigContainer);
+    const enableMdnsSetting = new Setting(opencodeConfigContainer);
 
     // 1M context model toggle
     new Setting(containerEl)
@@ -504,7 +631,7 @@ export class ClaudianSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
 
             // Refresh model selector to show/hide model options
-            const view = this.plugin.app.workspace.getLeavesOfType('claudian-view')[0]?.view as ClaudianView | undefined;
+            const view = this.plugin.app.workspace.getLeavesOfType('opencode-view')[0]?.view as OpencodeView | undefined;
             view?.refreshModelSelector();
           })
       );
@@ -515,7 +642,7 @@ export class ClaudianSettingTab extends PluginSettingTab {
       .setDesc(t('settings.maxTabs.desc'));
 
     // Warning element for high tab count
-    const maxTabsWarningEl = containerEl.createDiv({ cls: 'claudian-max-tabs-warning' });
+    const maxTabsWarningEl = containerEl.createDiv({ cls: 'opencode-max-tabs-warning' });
     maxTabsWarningEl.style.color = 'var(--text-warning)';
     maxTabsWarningEl.style.fontSize = '0.85em';
     maxTabsWarningEl.style.marginTop = '-0.5em';
@@ -555,7 +682,7 @@ export class ClaudianSettingTab extends PluginSettingTab {
       .setDesc(cliPathDescription);
 
     // Create validation message element
-    const validationEl = containerEl.createDiv({ cls: 'claudian-cli-path-validation' });
+    const validationEl = containerEl.createDiv({ cls: 'opencode-cli-path-validation' });
     validationEl.style.color = 'var(--text-error)';
     validationEl.style.fontSize = '0.85em';
     validationEl.style.marginTop = '-0.5em';
@@ -617,7 +744,7 @@ export class ClaudianSettingTab extends PluginSettingTab {
             (service) => Promise.resolve(service.cleanup())
           );
         });
-      text.inputEl.addClass('claudian-settings-cli-path-input');
+      text.inputEl.addClass('opencode-settings-cli-path-input');
       text.inputEl.style.width = '100%';
 
       // Validate on initial load

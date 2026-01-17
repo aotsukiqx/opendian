@@ -104,14 +104,14 @@ function createImageHtml(
   const alt = escapeHtml(altText || file.basename);
   const style = buildStyleAttribute(altText);
 
-  return `<span class="claudian-embedded-image"><img src="${escapeHtml(src)}" alt="${alt}" loading="lazy"${style}></span>`;
+  return `<span class="opencode-embedded-image"><img src="${escapeHtml(src)}" alt="${alt}" loading="lazy"${style}></span>`;
 }
 
 /**
  * Creates fallback HTML when image file is not found.
  */
 function createFallbackHtml(wikilink: string): string {
-  return `<span class="claudian-embedded-image-fallback">${escapeHtml(wikilink)}</span>`;
+  return `<span class="opencode-embedded-image-fallback">${escapeHtml(wikilink)}</span>`;
 }
 
 /**

@@ -1,13 +1,13 @@
 /* Plugin Settings */
-.claudian-plugin-settings-desc {
+.opencode-plugin-settings-desc {
   margin-bottom: 12px;
 }
 
-.claudian-plugins-container {
+.opencode-plugins-container {
   margin-top: 8px;
 }
 
-.claudian-plugin-header {
+.opencode-plugin-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -15,13 +15,13 @@
   padding: 0 12px;
 }
 
-.claudian-plugin-label {
+.opencode-plugin-label {
   font-size: var(--font-ui-small);
   color: var(--text-muted);
   font-weight: var(--font-medium);
 }
 
-.claudian-plugin-empty {
+.opencode-plugin-empty {
   padding: 16px;
   text-align: center;
   color: var(--text-muted);
@@ -30,13 +30,13 @@
   border-radius: 6px;
 }
 
-.claudian-plugin-list {
+.opencode-plugin-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.claudian-plugin-section-header {
+.opencode-plugin-section-header {
   font-size: 11px;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -44,7 +44,7 @@
   font-weight: 600;
 }
 
-.claudian-plugin-item {
+.opencode-plugin-item {
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -54,19 +54,19 @@
   transition: background 0.15s ease;
 }
 
-.claudian-plugin-item:hover {
+.opencode-plugin-item:hover {
   background: var(--background-modifier-hover);
 }
 
-.claudian-plugin-item-disabled {
+.opencode-plugin-item-disabled {
   opacity: 0.6;
 }
 
-.claudian-plugin-item-error {
+.opencode-plugin-item-error {
   opacity: 0.8;
 }
 
-.claudian-plugin-status {
+.opencode-plugin-status {
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -74,35 +74,35 @@
   flex-shrink: 0;
 }
 
-.claudian-plugin-status-enabled {
+.opencode-plugin-status-enabled {
   background: var(--color-green);
 }
 
-.claudian-plugin-status-disabled {
+.opencode-plugin-status-disabled {
   background: var(--text-muted);
 }
 
-.claudian-plugin-status-error {
+.opencode-plugin-status-error {
   background: var(--text-error);
 }
 
-.claudian-plugin-info {
+.opencode-plugin-info {
   flex: 1;
   min-width: 0;
 }
 
-.claudian-plugin-name-row {
+.opencode-plugin-name-row {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.claudian-plugin-name {
+.opencode-plugin-name {
   font-weight: 600;
 }
 
-.claudian-plugin-version-badge {
+.opencode-plugin-version-badge {
   font-size: 10px;
   padding: 2px 6px;
   background: var(--background-modifier-border);
@@ -110,7 +110,7 @@
   color: var(--text-muted);
 }
 
-.claudian-plugin-scope-badge {
+.opencode-plugin-scope-badge {
   font-size: 10px;
   padding: 2px 6px;
   background: var(--interactive-accent);
@@ -119,7 +119,7 @@
   text-transform: uppercase;
 }
 
-.claudian-plugin-error-badge {
+.opencode-plugin-error-badge {
   font-size: 10px;
   padding: 2px 6px;
   background: var(--text-error);
@@ -128,7 +128,7 @@
   text-transform: uppercase;
 }
 
-.claudian-plugin-preview {
+.opencode-plugin-preview {
   font-size: 12px;
   color: var(--text-muted);
   margin-top: 4px;
@@ -137,17 +137,17 @@
   white-space: nowrap;
 }
 
-.claudian-plugin-preview-error {
+.opencode-plugin-preview-error {
   color: var(--text-error);
 }
 
-.claudian-plugin-actions {
+.opencode-plugin-actions {
   display: flex;
   gap: 4px;
   flex-shrink: 0;
 }
 
-.claudian-plugin-action-btn {
+.opencode-plugin-action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -162,12 +162,12 @@
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.claudian-plugin-action-btn:hover {
+.opencode-plugin-action-btn:hover {
   background: var(--background-modifier-hover);
   color: var(--text-normal);
 }
 
-.claudian-plugin-action-btn svg {
+.opencode-plugin-action-btn svg {
   width: 14px;
   height: 14px;
 }

@@ -25,11 +25,11 @@ export class PluginSettingsManager {
     this.containerEl.empty();
 
     // Header with refresh button
-    const headerEl = this.containerEl.createDiv({ cls: 'claudian-plugin-header' });
-    headerEl.createSpan({ text: 'Claude Code Plugins', cls: 'claudian-plugin-label' });
+    const headerEl = this.containerEl.createDiv({ cls: 'opencode-plugin-header' });
+    headerEl.createSpan({ text: 'Claude Code Plugins', cls: 'opencode-plugin-label' });
 
     const refreshBtn = headerEl.createEl('button', {
-      cls: 'claudian-settings-action-btn',
+      cls: 'opencode-settings-action-btn',
       attr: { 'aria-label': 'Refresh' },
     });
     setIcon(refreshBtn, 'refresh-cw');
@@ -39,7 +39,7 @@ export class PluginSettingsManager {
 
     // Empty state
     if (plugins.length === 0) {
-      const emptyEl = this.containerEl.createDiv({ cls: 'claudian-plugin-empty' });
+      const emptyEl = this.containerEl.createDiv({ cls: 'opencode-plugin-empty' });
       emptyEl.setText('No Claude Code plugins installed. Install plugins via the Claude CLI.');
       return;
     }
@@ -48,11 +48,11 @@ export class PluginSettingsManager {
     const projectLocalPlugins = plugins.filter(p => p.scope === 'project' || p.scope === 'local');
     const userPlugins = plugins.filter(p => p.scope === 'user');
 
-    const listEl = this.containerEl.createDiv({ cls: 'claudian-plugin-list' });
+    const listEl = this.containerEl.createDiv({ cls: 'opencode-plugin-list' });
 
     // Project/Local plugins section
     if (projectLocalPlugins.length > 0) {
-      const sectionHeader = listEl.createDiv({ cls: 'claudian-plugin-section-header' });
+      const sectionHeader = listEl.createDiv({ cls: 'opencode-plugin-section-header' });
       sectionHeader.setText('Project Plugins');
 
       for (const plugin of projectLocalPlugins) {
@@ -62,7 +62,7 @@ export class PluginSettingsManager {
 
     // User plugins section
     if (userPlugins.length > 0) {
-      const sectionHeader = listEl.createDiv({ cls: 'claudian-plugin-section-header' });
+      const sectionHeader = listEl.createDiv({ cls: 'opencode-plugin-section-header' });
       sectionHeader.setText('User Plugins');
 
       for (const plugin of userPlugins) {
@@ -72,48 +72,48 @@ export class PluginSettingsManager {
   }
 
   private renderPluginItem(listEl: HTMLElement, plugin: ClaudianPluginType) {
-    const itemEl = listEl.createDiv({ cls: 'claudian-plugin-item' });
+    const itemEl = listEl.createDiv({ cls: 'opencode-plugin-item' });
     if (!plugin.enabled) {
-      itemEl.addClass('claudian-plugin-item-disabled');
+      itemEl.addClass('opencode-plugin-item-disabled');
     }
     if (plugin.status !== 'available') {
-      itemEl.addClass('claudian-plugin-item-error');
+      itemEl.addClass('opencode-plugin-item-error');
     }
 
     // Status indicator (colored dot)
-    const statusEl = itemEl.createDiv({ cls: 'claudian-plugin-status' });
+    const statusEl = itemEl.createDiv({ cls: 'opencode-plugin-status' });
     if (plugin.status !== 'available') {
-      statusEl.addClass('claudian-plugin-status-error');
+      statusEl.addClass('opencode-plugin-status-error');
     } else if (plugin.enabled) {
-      statusEl.addClass('claudian-plugin-status-enabled');
+      statusEl.addClass('opencode-plugin-status-enabled');
     } else {
-      statusEl.addClass('claudian-plugin-status-disabled');
+      statusEl.addClass('opencode-plugin-status-disabled');
     }
 
     // Info section
-    const infoEl = itemEl.createDiv({ cls: 'claudian-plugin-info' });
+    const infoEl = itemEl.createDiv({ cls: 'opencode-plugin-info' });
 
     // Name row with badges
-    const nameRow = infoEl.createDiv({ cls: 'claudian-plugin-name-row' });
+    const nameRow = infoEl.createDiv({ cls: 'opencode-plugin-name-row' });
 
-    const nameEl = nameRow.createSpan({ cls: 'claudian-plugin-name' });
+    const nameEl = nameRow.createSpan({ cls: 'opencode-plugin-name' });
     nameEl.setText(plugin.name);
 
     // Scope badge
-    const scopeEl = nameRow.createSpan({ cls: 'claudian-plugin-scope-badge' });
+    const scopeEl = nameRow.createSpan({ cls: 'opencode-plugin-scope-badge' });
     scopeEl.setText(this.getScopeLabel(plugin.scope));
 
     // Error badge if unavailable
     if (plugin.status !== 'available') {
-      const errorEl = nameRow.createSpan({ cls: 'claudian-plugin-error-badge' });
+      const errorEl = nameRow.createSpan({ cls: 'opencode-plugin-error-badge' });
       errorEl.setText(plugin.status === 'unavailable' ? 'Unavailable' : 'Invalid');
     }
 
     // Description or error message
-    const previewEl = infoEl.createDiv({ cls: 'claudian-plugin-preview' });
+    const previewEl = infoEl.createDiv({ cls: 'opencode-plugin-preview' });
     if (plugin.error) {
       previewEl.setText(plugin.error);
-      previewEl.addClass('claudian-plugin-preview-error');
+      previewEl.addClass('opencode-plugin-preview-error');
     } else if (plugin.description) {
       previewEl.setText(plugin.description);
     } else {
@@ -121,12 +121,12 @@ export class PluginSettingsManager {
     }
 
     // Actions
-    const actionsEl = itemEl.createDiv({ cls: 'claudian-plugin-actions' });
+    const actionsEl = itemEl.createDiv({ cls: 'opencode-plugin-actions' });
 
     // Enable/disable toggle button (only if available)
     if (plugin.status === 'available') {
       const toggleBtn = actionsEl.createEl('button', {
-        cls: 'claudian-plugin-action-btn',
+        cls: 'opencode-plugin-action-btn',
         attr: { 'aria-label': plugin.enabled ? 'Disable' : 'Enable' },
       });
       setIcon(toggleBtn, plugin.enabled ? 'toggle-right' : 'toggle-left');
