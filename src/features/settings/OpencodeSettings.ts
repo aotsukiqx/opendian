@@ -616,14 +616,21 @@ export class OpencodeSettingTab extends PluginSettingTab {
     // Show/hide OpenCode config based on backend selection
     const updateOpencodeConfigVisibility = (): void => {
       opencodeConfigContainer.style.display = this.plugin.settings.agentBackend === 'opencode' ? 'block' : 'none';
+      // Also update 1M model visibility for Claude Code backend
+      if (show1MModelContainer) {
+        show1MModelContainer.style.display = this.plugin.settings.agentBackend === 'claude-code' ? 'block' : 'none';
+      }
     };
 
     // Store references for visibility updates
     const autoStartSetting = new Setting(opencodeConfigContainer);
     const enableMdnsSetting = new Setting(opencodeConfigContainer);
 
-    // 1M context model toggle
-    new Setting(containerEl)
+    // Claude Code specific: 1M context model toggle
+    const show1MModelContainer = containerEl.createDiv({ cls: 'opencode-show-1m-model-container' });
+    show1MModelContainer.style.display = this.plugin.settings.agentBackend === 'claude-code' ? 'block' : 'none';
+
+    new Setting(show1MModelContainer)
       .setName(t('settings.show1MModel.name'))
       .setDesc(t('settings.show1MModel.desc'))
       .addToggle((toggle) =>

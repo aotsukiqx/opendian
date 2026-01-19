@@ -9,6 +9,7 @@
  */
 
 import { Notice, Platform } from 'obsidian';
+import type { ChildProcess } from 'child_process';
 import * as path from 'path';
 
 export interface OpencodeServerConfig {
@@ -61,8 +62,10 @@ export class OpencodeServerManager {
     */
   private getOpencodeCliPath(): string {
     // First check if 'opencode' is in PATH
+    // Use Platform.isWin to check for Windows - opencode.exe needs extension on Windows
+    const exeName = Platform.isWin ? 'opencode.exe' : 'opencode';
     const pathInEnv = process.env.PATH?.split(path.delimiter)
-      .map(dir => path.join(dir, 'opencode'))
+      .map(dir => path.join(dir, exeName))
       .find(cliPath => {
         try {
           const fs = require('fs');
@@ -97,7 +100,7 @@ export class OpencodeServerManager {
           if (fs.existsSync(p)) return p;
         } catch {}
       }
-    } else if (Platform.isWin32) {
+    } else if (Platform.isWin) {
       return 'opencode.exe';
     }
 
@@ -268,11 +271,12 @@ export class OpencodeServerManager {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { spawn } = require('child_process');
 
-      this.process = spawn(cliPath, args, {
+       this.process = spawn(cliPath, args, {
         cwd: this.vaultPath,
         env,
         stdio: ['ignore', 'pipe', 'pipe'],
         detached: true,
+        windowsHide: true,  // Hide console window on Windows
       });
 
       // Handle process events
