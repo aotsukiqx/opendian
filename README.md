@@ -2,6 +2,8 @@
 
 ![Preview](Preview.png)
 
+> **Note**: This plugin is based on [Claudian](https://github.com/YishenTu/claudian) by [YishenTu](https://github.com/YishenTu). Special thanks to YishenTu for creating the excellent Claudian plugin that served as the foundation for this project.
+
 An Obsidian plugin that embeds OpenCode Agent as a sidebar chat interface. Your vault becomes OpenCode's working directory, giving it full agentic capabilities: file read/write, search, bash commands, and multi-step workflows.
 
 ## Features
@@ -245,5 +247,6 @@ Licensed under the [MIT License](LICENSE).
 
 ## Acknowledgments
 
+- [YishenTu](https://github.com/YishenTu) for creating the amazing [Claudian](https://github.com/YishenTu/claudian) plugin, which served as the foundation for this project
 - [Obsidian](https://obsidian.md) for the plugin API
 - [OpenCode](https://opencode.com) for the Agent SDK

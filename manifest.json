@@ -3,7 +3,7 @@
   "name": "OpenCode",
   "version": "1.0.0",
   "minAppVersion": "1.0.0",
-  "description": "OpenCode plugin that embeds OpenCode as sidebar chat. Vault becomes OpenCode's working directory with full agentic capabilities.",
+  "description": "Based on Claudian by YishenTu. An OpenCode plugin that embeds OpenCode as sidebar chat. Vault becomes OpenCode's working directory with full agentic capabilities.",
   "author": "Colin.L",
   "authorUrl": "https://github.com/aotsukiqx",
   "isDesktopOnly": true
