@@ -1,5 +1,5 @@
 {
-  "name": "opencode",
+  "name": "opencodian",
   "version": "1.0.0",
   "description": "OpenCode plugin that embeds OpenCode as sidebar chat with full agentic capabilities.",
   "main": "main.js",

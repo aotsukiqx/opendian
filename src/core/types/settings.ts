@@ -219,7 +219,6 @@ export interface KeyboardNavigationSettings {
  * OpenCode server configuration (written to opencode.json).
  */
 export interface OpencodeServerConfig {
-  hostname: string;
   port: number;
   timeout: number;
   /** Auto-start server on plugin load */
@@ -228,8 +227,6 @@ export interface OpencodeServerConfig {
   enableMdns: boolean;
   /** Allowed CORS origins */
   corsOrigins: string[];
-  /** Connect to external server instead of spawning local process */
-  externalServer: boolean;
 }
 
 /**
@@ -243,8 +240,6 @@ export interface OpencodeSettings {
   // Backend selection
   agentBackend: 'claude-code' | 'opencode';
   opencodeConfig: OpencodeServerConfig;
-  /** Server password (runtime only, NOT written to opencode.json) */
-  opencodePassword?: string;
 
   // Security (Claudian-specific, CC uses permissions.deny instead)
   enableBlocklist: boolean;
@@ -323,15 +318,12 @@ export const DEFAULT_SETTINGS: OpencodeSettings = {
   // Backend selection
   agentBackend: 'claude-code',
   opencodeConfig: {
-    hostname: '127.0.0.1',
     port: 4096,
     timeout: 5000,
     autoStart: true,
     enableMdns: false,
     corsOrigins: ['app://obsidian.md'],
-    externalServer: false,
   },
-  opencodePassword: '',
 
   // Security
   enableBlocklist: true,

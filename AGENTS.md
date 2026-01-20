@@ -1,7 +1,7 @@
 # PROJECT KNOWLEDGE BASE
 
 **Generated:** 2026-01-16
-**Project:** opendian - Obsidian plugin embedding OpenCode as sidebar chat
+**Project:** opencodian - Obsidian plugin embedding OpenCode as sidebar chat
 
 ## OVERVIEW
 

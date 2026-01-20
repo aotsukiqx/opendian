@@ -521,19 +521,6 @@ export class OpencodeSettingTab extends PluginSettingTab {
     opencodeConfigContainer.style.display = this.plugin.settings.agentBackend === 'opencode' ? 'block' : 'none';
 
     new Setting(opencodeConfigContainer)
-      .setName(t('settings.opencodeHostname.name'))
-      .setDesc(t('settings.opencodeHostname.desc'))
-      .addText((text) =>
-        text
-          .setPlaceholder('127.0.0.1')
-          .setValue(this.plugin.settings.opencodeConfig.hostname)
-          .onChange(async (value) => {
-            this.plugin.settings.opencodeConfig.hostname = value.trim() || '127.0.0.1';
-            await this.plugin.saveSettings();
-          })
-      );
-
-    new Setting(opencodeConfigContainer)
       .setName(t('settings.opencodePort.name'))
       .setDesc(t('settings.opencodePort.desc'))
       .addText((text) =>
@@ -557,19 +544,6 @@ export class OpencodeSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             const timeout = parseInt(value, 10);
             this.plugin.settings.opencodeConfig.timeout = isNaN(timeout) ? 5000 : timeout;
-            await this.plugin.saveSettings();
-          })
-      );
-
-    new Setting(opencodeConfigContainer)
-      .setName('Server Password')
-      .setDesc('OpenCode server password for authentication (optional)')
-      .addText((text) =>
-        text
-          .setPlaceholder('password')
-          .setValue(this.plugin.settings.opencodePassword ?? '')
-          .onChange(async (value) => {
-            this.plugin.settings.opencodePassword = value.trim();
             await this.plugin.saveSettings();
           })
       );
@@ -600,19 +574,6 @@ export class OpencodeSettingTab extends PluginSettingTab {
           })
       );
 
-    // External server toggle
-    new Setting(opencodeConfigContainer)
-      .setName('External Server')
-      .setDesc('Connect to an existing OpenCode server instead of spawning a local process')
-      .addToggle((toggle) =>
-        toggle
-          .setValue(this.plugin.settings.opencodeConfig.externalServer ?? false)
-          .onChange(async (value) => {
-            this.plugin.settings.opencodeConfig.externalServer = value;
-            await this.plugin.saveSettings();
-          })
-      );
-
     // Show/hide OpenCode config based on backend selection
     const updateOpencodeConfigVisibility = (): void => {
       opencodeConfigContainer.style.display = this.plugin.settings.agentBackend === 'opencode' ? 'block' : 'none';
@@ -621,10 +582,6 @@ export class OpencodeSettingTab extends PluginSettingTab {
         show1MModelContainer.style.display = this.plugin.settings.agentBackend === 'claude-code' ? 'block' : 'none';
       }
     };
-
-    // Store references for visibility updates
-    const autoStartSetting = new Setting(opencodeConfigContainer);
-    const enableMdnsSetting = new Setting(opencodeConfigContainer);
 
     // Claude Code specific: 1M context model toggle
     const show1MModelContainer = containerEl.createDiv({ cls: 'opencode-show-1m-model-container' });

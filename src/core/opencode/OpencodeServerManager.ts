@@ -4,7 +4,6 @@
  * Manages the OpenCode server process lifecycle:
  * - Starts/stops the server process in the vault directory
  * - Generates config file with server settings
- * - Sets authentication environment variables
  * - Handles CORS configuration for Obsidian
  */
 
@@ -13,18 +12,12 @@ import type { ChildProcess } from 'child_process';
 import * as path from 'path';
 
 export interface OpencodeServerConfig {
-  hostname: string;
   port: number;
   autoStart: boolean;
   enableMdns: boolean;
   corsOrigins: string[];
   /** Connect to external server instead of spawning local process */
   externalServer: boolean;
-}
-
-/** Extended config including runtime-only password */
-export interface OpencodeManagerConfig extends OpencodeServerConfig {
-  password?: string;
 }
 
 export interface ServerStatus {
@@ -37,18 +30,18 @@ export interface ServerStatus {
 
 /**
  * Manages OpenCode server process lifecycle.
+ * Always runs server on 127.0.0.1 without authentication.
  */
 export class OpencodeServerManager {
   private process: ChildProcess | null = null;
   private vaultPath: string;
-  private config: OpencodeManagerConfig;
-  private password: string;
+  private config: OpencodeServerConfig;
+  /** Fixed hostname - always 127.0.0.1 for local access */
+  private readonly hostname = '127.0.0.1';
 
-  constructor(vaultPath: string, config: OpencodeServerConfig, password?: string) {
+  constructor(vaultPath: string, config: OpencodeServerConfig) {
     this.vaultPath = vaultPath;
-    this.password = password ?? '';
     this.config = {
-      hostname: config.hostname ?? '127.0.0.1',
       port: config.port ?? 4096,
       corsOrigins: config.corsOrigins ?? [],
       enableMdns: config.enableMdns ?? false,
@@ -110,8 +103,8 @@ export class OpencodeServerManager {
   }
 
   /**
-   * Generate the opencode.json config file content.
-   */
+    * Generate the opencode.json config file content.
+    */
   private generateConfigContent(): string {
     // Always include Obsidian origin in CORS
     const corsOrigins = new Set(this.config.corsOrigins ?? []);
@@ -121,7 +114,7 @@ export class OpencodeServerManager {
       $schema: 'https://opencode.ai/config.json',
       server: {
         port: this.config.port,
-        hostname: this.config.hostname,
+        hostname: this.hostname,
         mdns: this.config.enableMdns,
         cors: Array.from(corsOrigins),
       },
@@ -171,23 +164,12 @@ export class OpencodeServerManager {
   }
 
   /**
-   * Build environment variables for the server process.
-   */
+    * Build environment variables for the server process.
+    */
   private buildEnv(): NodeJS.ProcessEnv {
     const env: NodeJS.ProcessEnv = { ...process.env };
-
-    // Set authentication from plugin settings
-    if (this.password) {
-      env.OPENCODE_SERVER_PASSWORD = this.password;
-      console.log('[OpenCode] Password env var set (length:', this.password.length, ')');
-    } else {
-      console.log('[OpenCode] No password set - OPENCODE_SERVER_PASSWORD not set');
-    }
-
-    // Clear any existing auth settings that might conflict
-    delete env.OPENCODE_API_KEY;
-    delete env.OPENCODE_AUTH_TOKEN;
-
+    // No authentication - server runs without password
+    console.log('[OpenCode] Starting server without authentication');
     return env;
   }
 
@@ -215,14 +197,12 @@ export class OpencodeServerManager {
 
     console.log('[OpenCode] Starting local server...');
     console.log('[OpenCode] Config:', JSON.stringify({
-      hostname: this.config.hostname,
       port: this.config.port,
       autoStart: this.config.autoStart,
       enableMdns: this.config.enableMdns,
       externalServer: this.config.externalServer,
       corsOrigins: this.config.corsOrigins,
     }));
-    console.log('[OpenCode] Password provided:', !!this.password);
 
     try {
       // Write config file first
@@ -246,11 +226,11 @@ export class OpencodeServerManager {
 
       const env = this.buildEnv();
 
-      // Build command arguments
+      // Build command arguments - always use 127.0.0.1
       const args = [
         'serve',
         '--port', String(this.config.port),
-        '--hostname', this.config.hostname,
+        '--hostname', this.hostname,
       ];
 
       // Add CORS origins - always include Obsidian origin
@@ -314,7 +294,7 @@ export class OpencodeServerManager {
         attempts++;
         const status = await this.checkHealth();
         if (status.running) {
-          console.log(`[OpenCode] Server started successfully on ${this.config.hostname}:${this.config.port}`);
+          console.log(`[OpenCode] Server started successfully on ${this.hostname}:${this.config.port}`);
           new Notice(`OpenCode server started on port ${this.config.port}`);
           return true;
         }
@@ -381,10 +361,10 @@ export class OpencodeServerManager {
   }
 
   /**
-   * Check server health via HTTP request.
-   */
+    * Check server health via HTTP request.
+    */
   async checkHealth(): Promise<ServerStatus> {
-    const url = `http://${this.config.hostname}:${this.config.port}/global/health`;
+    const url = `http://${this.hostname}:${this.config.port}/global/health`;
 
     try {
       const response = await fetch(url, {
@@ -397,7 +377,7 @@ export class OpencodeServerManager {
         return {
           running: data.healthy ?? true,
           port: this.config.port,
-          hostname: this.config.hostname,
+          hostname: this.hostname,
           version: data.version,
         };
       }
@@ -405,30 +385,29 @@ export class OpencodeServerManager {
       return {
         running: false,
         port: this.config.port,
-        hostname: this.config.hostname,
+        hostname: this.hostname,
       };
     } catch {
       return {
         running: false,
         port: this.config.port,
-        hostname: this.config.hostname,
+        hostname: this.hostname,
       };
     }
   }
 
   /**
-   * Get the server URL.
-   */
+    * Get the server URL.
+    */
   getServerUrl(): string {
-    return `http://${this.config.hostname}:${this.config.port}`;
+    return `http://${this.hostname}:${this.config.port}`;
   }
 
   /**
-   * Get current config.
-   */
+    * Get current config.
+    */
   getConfig(): OpencodeServerConfig {
     return {
-      hostname: this.config.hostname,
       port: this.config.port,
       autoStart: this.config.autoStart,
       enableMdns: this.config.enableMdns,
@@ -437,8 +416,8 @@ export class OpencodeServerManager {
   }
 
   /**
-   * Update configuration.
-   */
+    * Update configuration.
+    */
   updateConfig(config: Partial<OpencodeServerConfig>): void {
     this.config = {
       ...this.config,
@@ -447,27 +426,16 @@ export class OpencodeServerManager {
   }
 
   /**
-   * Set password (runtime only, not persisted).
-   */
-  setPassword(password: string): void {
-    this.password = password;
-  }
-
-  /**
-   * Utility sleep function.
-   */
+    * Utility sleep function.
+    */
   private sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**
-   * Cleanup resources.
-   */
+    * Cleanup resources.
+    */
   cleanup(): void {
-    if (this.checkInterval) {
-      clearInterval(this.checkInterval);
-      this.checkInterval = null;
-    }
     this.stop();
   }
 }

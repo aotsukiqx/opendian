@@ -1,6 +1,6 @@
 {
-  "id": "opencode",
-  "name": "OpenCode",
+  "id": "opencodian",
+  "name": "OpenCodian",
   "version": "1.0.0",
   "minAppVersion": "1.0.0",
   "description": "Based on Claudian by YishenTu. An OpenCode plugin that embeds OpenCode as sidebar chat. Vault becomes OpenCode's working directory with full agentic capabilities.",

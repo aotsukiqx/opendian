@@ -40,24 +40,9 @@ export class OpencodeService {
   }
 
   /**
-   * Get authentication credentials from environment variables.
+   * Initialize the OpenCode client and ensure server is running.
+   * No authentication - server runs without password.
    */
-  private getAuthCredentials(): { username: string; password: string } | null {
-    const password = process.env.OPENCODE_SERVER_PASSWORD;
-    const username = process.env.OPENCODE_SERVER_USERNAME;
-
-    if (password) {
-      return {
-        username: username ?? 'opencode',
-        password,
-      };
-    }
-    return null;
-  }
-
-  /**
-     * Initialize the OpenCode client and ensure server is running.
-     */
   async initialize(): Promise<boolean> {
     try {
       const SDK = await import('@opencode-ai/sdk/client');
@@ -65,43 +50,10 @@ export class OpencodeService {
 
       const baseUrl = `http://${this.config.hostname}:${this.config.port}`;
 
-      // Get authentication from environment variables
-      const auth = this.getAuthCredentials();
-
-      // Build client options with optional Basic Auth
+      // Simple client configuration without authentication
       const clientOptions: Record<string, unknown> = {
         baseUrl,
       };
-
-      // Add Basic Auth if credentials provided
-      if (auth) {
-        const credentials = Buffer.from(`${auth.username}:${auth.password}`).toString('base64');
-
-        clientOptions.security = [
-          {
-            type: 'http',
-            scheme: 'basic',
-            in: 'header',
-            name: 'Authorization',
-          },
-        ];
-
-        // Custom fetch to add Authorization header
-        const originalFetch = clientOptions.fetch as typeof fetch | undefined;
-        clientOptions.fetch = (req: Request): Promise<Response> => {
-          const authReq = new Request(req.url, {
-            method: req.method,
-            headers: {
-              ...req.headers,
-              Authorization: `Basic ${credentials}`,
-            },
-            body: req.body,
-            mode: req.mode,
-            credentials: req.credentials,
-          });
-          return originalFetch ? originalFetch(authReq) : fetch(authReq);
-        };
-      }
 
       const client = createOpencodeClient(clientOptions);
 

@@ -31,14 +31,14 @@ An Obsidian plugin that embeds OpenCode Agent as a sidebar chat interface. Your 
 
 ### From GitHub Release (recommended)
 
-1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/YishenTu/opendian/releases/latest)
-2. Create a folder called `opendian` in your vault's plugins folder:
+1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/aotsukiqx/opencodian/releases/latest)
+2. Create a folder called `opencodian` in your vault's plugins folder:
    ```
-   /path/to/vault/.obsidian/plugins/opendian/
+   /path/to/vault/.obsidian/plugins/opencodian/
    ```
-3. Copy the downloaded files into the `opendian` folder
+3. Copy the downloaded files into the `opencodian` folder
 4. Enable the plugin in Obsidian:
-   - Settings → Community plugins → Enable "OpenCode"
+   - Settings → Community plugins → Enable "OpenCodian"
 
 ### Using BRAT
 
@@ -47,8 +47,8 @@ An Obsidian plugin that embeds OpenCode Agent as a sidebar chat interface. Your 
 1. Install the BRAT plugin from Obsidian Community Plugins
 2. Enable BRAT in Settings → Community plugins
 3. Open BRAT settings and click "Add Beta plugin"
-4. Enter the repository URL: `https://github.com/YishenTu/opendian`
-5. Click "Add Plugin" and BRAT will install OpenCode automatically
+4. Enter the repository URL: `https://github.com/aotsukiqx/opencodian`
+5. Click "Add Plugin" and BRAT will install OpenCodian automatically
 6. Enable OpenCode in Settings → Community plugins
 
 > **Tip**: BRAT will automatically check for updates and notify you when a new version is available.
@@ -58,8 +58,8 @@ An Obsidian plugin that embeds OpenCode Agent as a sidebar chat interface. Your 
 1. Clone this repository into your vault's plugins folder:
    ```bash
    cd /path/to/vault/.obsidian/plugins
-   git clone https://github.com/YishenTu/opendian.git
-   cd opendian
+   git clone https://github.com/aotsukiqx/opencodian.git
+   cd opencodian
    ```
 
 2. Install dependencies and build:
@@ -200,7 +200,7 @@ If different, GUI apps like Obsidian may not find Node.js.
 1. Install native binary (recommended)
 2. Add Node.js path to Settings → Environment: `PATH=/path/to/node/bin`
 
-**Still having issues?** [Open a GitHub issue](https://github.com/YishenTu/opendian/issues) with your platform, CLI path, and error message.
+**Still having issues?** [Open a GitHub issue](https://github.com/aotsukiqx/opencodian/issues) with your platform, CLI path, and error message.
 
 ## Architecture
 
